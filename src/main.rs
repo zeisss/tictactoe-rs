@@ -2,8 +2,7 @@ use std::fmt;
 use std::time::Duration;
 
 use color_eyre::Result;
-use crossterm::event::{self, KeyCode, KeyEvent, KeyModifiers, MouseEvent, poll};
-use crossterm::terminal::enable_raw_mode;
+use crossterm::event::{self, KeyCode, KeyEvent, KeyModifiers, poll};
 use ratatui::Frame;
 use ratatui::layout::{Alignment, Constraint, Layout, Rect};
 use ratatui::style::{Color, Stylize};
@@ -13,17 +12,194 @@ use ratatui::widgets::Paragraph;
 use ratatui::widgets::canvas::{Canvas, Circle, Context, Line};
 
 // Name: Waldemar, James and Stephan's TicTacToe
+
+mod tictactoe {
+    #[derive(Debug, Copy, Clone, PartialEq)]
+    pub enum Player {
+        Naught,
+        Cross,
+    }
+    #[derive(Debug, Copy, Clone, PartialEq)]
+    pub enum Outcome {
+        NaughtWins,
+        CrossWins,
+        Draw,
+    }
+    #[derive(Debug, Copy, Clone, PartialEq)]
+    pub enum Cell {
+        Empty,
+        PlayerOccupied(Player),
+    }
+    #[derive(Debug)]
+    pub struct GameState {
+        active_player: Player,
+        outcome: Option<Outcome>,
+        board: [[Cell; 3]; 3],
+    }
+
+    impl GameState {
+        pub fn default() -> Self {
+            Self {
+                active_player: Player::Naught,
+                outcome: None,
+                board: [[Cell::Empty; 3]; 3],
+            }
+        }
+
+        pub fn place(&mut self, x: usize, y: usize) {
+            if x > 2 || y > 2 {
+                panic!("Invalid cell coordinates");
+            }
+
+            let cell = self.board[x][y];
+            match cell {
+                Cell::PlayerOccupied(_) => {
+                    panic!("Cell is already occupied");
+                }
+                Cell::Empty => {
+                    self.board[x][y] = Cell::PlayerOccupied(self.active_player);
+                }
+            }
+
+            // Swap active player
+            self.active_player = match self.active_player {
+                Player::Naught => Player::Cross,
+                Player::Cross => Player::Naught,
+            };
+
+            // check wincondition
+            if let Some(outcome) = self.check_wincondition() {
+                self.outcome = Some(outcome);
+            }
+        }
+
+        fn check_wincondition(&self) -> Option<Outcome> {
+            // Check rows
+            for row in 0..3 {
+                if let Cell::PlayerOccupied(player) = self.board[row][0] {
+                    if self.board[row][1] == Cell::PlayerOccupied(player)
+                        && self.board[row][2] == Cell::PlayerOccupied(player)
+                    {
+                        return Some(match player {
+                            Player::Naught => Outcome::NaughtWins,
+                            Player::Cross => Outcome::CrossWins,
+                        });
+                    }
+                }
+            }
+
+            // Check columns
+            for col in 0..3 {
+                if let Cell::PlayerOccupied(player) = self.board[0][col] {
+                    if self.board[1][col] == Cell::PlayerOccupied(player)
+                        && self.board[2][col] == Cell::PlayerOccupied(player)
+                    {
+                        return Some(match player {
+                            Player::Naught => Outcome::NaughtWins,
+                            Player::Cross => Outcome::CrossWins,
+                        });
+                    }
+                }
+            }
+
+            // Check diagonals
+            if let Cell::PlayerOccupied(player) = self.board[0][0] {
+                if self.board[1][1] == Cell::PlayerOccupied(player)
+                    && self.board[2][2] == Cell::PlayerOccupied(player)
+                {
+                    return Some(match player {
+                        Player::Naught => Outcome::NaughtWins,
+                        Player::Cross => Outcome::CrossWins,
+                    });
+                }
+            }
+
+            if let Cell::PlayerOccupied(player) = self.board[0][2] {
+                if self.board[1][1] == Cell::PlayerOccupied(player)
+                    && self.board[2][0] == Cell::PlayerOccupied(player)
+                {
+                    return Some(match player {
+                        Player::Naught => Outcome::NaughtWins,
+                        Player::Cross => Outcome::CrossWins,
+                    });
+                }
+            }
+
+            // Check for draw
+            if self
+                .board
+                .iter()
+                .all(|row| row.iter().all(|&cell| cell != Cell::Empty))
+            {
+                return Some(Outcome::Draw);
+            }
+
+            None
+        }
+    }
+
+    #[test]
+    fn test_game_state() {
+        let mut game = GameState::default();
+        assert_eq!(game.outcome, None);
+        game.place(0, 0); // Naught
+        game.place(1, 0); // Cross
+        game.place(0, 1); // Naught
+        game.place(1, 1); // Cross
+        game.place(0, 2); // Naught wins
+        assert_eq!(game.outcome, Some(Outcome::NaughtWins));
+    }
+
+    #[test]
+    fn test_game_state_cross_wins() {
+        let mut game = GameState::default();
+        assert_eq!(game.outcome, None);
+        game.place(0, 0); // Naught
+        game.place(1, 0); // Cross
+        game.place(0, 1); // Naught
+        game.place(1, 1); // Cross
+        game.place(2, 2); // Naught
+        game.place(1, 2); // Cross wins
+        assert_eq!(game.outcome, Some(Outcome::CrossWins));
+    }
+
+    #[test]
+    fn test_game_state_draw() {
+        let mut game = GameState::default();
+        assert_eq!(game.outcome, None);
+
+        game.place(0, 0); // Naught
+        game.place(1, 1); // Cross
+        game.place(2, 2); // Naught
+        game.place(0, 2); // Cross
+        game.place(2, 0); // Naught
+        game.place(2, 1); // Cross
+        game.place(1, 2); // Naught
+        game.place(1, 0); // Cross
+        game.place(0, 1); // Naught -> Draw
+
+        assert_eq!(game.outcome, Some(Outcome::Draw));
+    }
+}
+
+use tictactoe::GameState;
+
 const QUIT_KEY: KeyEvent = KeyEvent::new(KeyCode::Char('q'), KeyModifiers::NONE);
 
 #[derive(Debug)]
 struct App {
     mouse_events: i32,
     running: bool,
+    state: GameState,
 }
 
 impl App {
     fn default() -> Self {
-        Self { mouse_events: 0, running: true }
+        Self {
+            mouse_events: 0,
+            running: true,
+            state: GameState::default(),
+        }
     }
 
     fn goodbye(&mut self) {
@@ -35,6 +211,7 @@ impl App {
         match event {
             event::Event::Mouse(_) => {
                 self.mouse_events += 1;
+                self.state.place(0, 0);
             }
             event::Event::Key(key) if key == QUIT_KEY => {
                 self.goodbye();
@@ -43,7 +220,6 @@ impl App {
         }
     }
 }
-
 
 fn main() -> Result<()> {
     color_eyre::install()?;
@@ -65,7 +241,7 @@ fn main() -> Result<()> {
                 let ev = event::read()?;
                 app.update(ev);
                 if !poll(Duration::from_millis(48))? {
-                    break
+                    break;
                 }
             }
 
