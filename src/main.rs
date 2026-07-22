@@ -1,4 +1,3 @@
-use std::fmt;
 use std::time::Duration;
 
 use color_eyre::Result;
@@ -27,6 +26,16 @@ mod tictactoe {
         CrossWins,
         Draw,
     }
+
+    impl From<Player> for Outcome {
+        fn from(value: Player) -> Self {
+            match value {
+            Player::Naught => Outcome::NaughtWins,
+            Player::Cross => Outcome::CrossWins,
+            }
+        }
+    }
+
     #[derive(Debug, Copy, Clone, PartialEq)]
     pub enum Cell {
         Empty,
@@ -93,10 +102,7 @@ mod tictactoe {
                     if self.board[row][1] == Cell::PlayerOccupied(player)
                         && self.board[row][2] == Cell::PlayerOccupied(player)
                     {
-                        return Some(match player {
-                            Player::Naught => Outcome::NaughtWins,
-                            Player::Cross => Outcome::CrossWins,
-                        });
+                        return Some(Outcome::from(player));
                     }
                 }
             }
@@ -107,10 +113,7 @@ mod tictactoe {
                     if self.board[1][col] == Cell::PlayerOccupied(player)
                         && self.board[2][col] == Cell::PlayerOccupied(player)
                     {
-                        return Some(match player {
-                            Player::Naught => Outcome::NaughtWins,
-                            Player::Cross => Outcome::CrossWins,
-                        });
+                        return Some(Outcome::from(player));
                     }
                 }
             }
@@ -120,10 +123,7 @@ mod tictactoe {
                 if self.board[1][1] == Cell::PlayerOccupied(player)
                     && self.board[2][2] == Cell::PlayerOccupied(player)
                 {
-                    return Some(match player {
-                        Player::Naught => Outcome::NaughtWins,
-                        Player::Cross => Outcome::CrossWins,
-                    });
+                    return Some(Outcome::from(player));
                 }
             }
 
@@ -131,10 +131,7 @@ mod tictactoe {
                 if self.board[1][1] == Cell::PlayerOccupied(player)
                     && self.board[2][0] == Cell::PlayerOccupied(player)
                 {
-                    return Some(match player {
-                        Player::Naught => Outcome::NaughtWins,
-                        Player::Cross => Outcome::CrossWins,
-                    });
+                    return Some(Outcome::from(player));
                 }
             }
 
