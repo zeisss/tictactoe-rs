@@ -23,13 +23,27 @@ impl App {
     fn default() -> Self {
         Self { mouse_events: 0 }
     }
-    fn foo(self) {
-        println!("foo");
+    fn good_byte(&self) {
+        println!("Saying goodbye after {} mouse events", self.mouse_events);
     }
 }
 
+const QUIT_KEY: KeyEvent = KeyEvent::new(KeyCode::Char('q'), KeyModifiers::NONE);
+fn update(app: &mut App, event: event::Event) -> bool {
+    match event {
+        event::Event::Mouse(_) => {
+            app.mouse_events += 1;
+        }
+        event::Event::Key(key) if key == QUIT_KEY => {
+            app.good_byte();
+            return true
+        }
+        _ => {}
+    }
+    false
+}
+
 fn main() -> Result<()> {
-    const QUIT_KEY: KeyEvent = KeyEvent::new(KeyCode::Char('q'), KeyModifiers::NONE);
     color_eyre::install()?;
 
     ratatui::run(|terminal| {
@@ -46,21 +60,10 @@ fn main() -> Result<()> {
         'outer:
         loop {
             terminal.draw(|f| render(f, &app))?;
-
             loop {
                 let ev = event::read()?;
-                // println!("{:?}", ev);
-                match ev {
-                    event::Event::Mouse(_) => {
-                        // println!("Mouse {:?}", ev);
-                        app.mouse_events += 1;
-                        // println!("App: {:?}", app.mouse_events);
-                    }
-                    event::Event::Key(key) if key == QUIT_KEY => {
-                        app.foo();
-                        break 'outer;
-                    }
-                    _ => {}
+                if update(&mut app, ev) {
+                    break 'outer;
                 }
                 if !poll(Duration::from_millis(48))? {
                     break
