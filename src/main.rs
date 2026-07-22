@@ -279,10 +279,6 @@ fn main() -> Result<()> {
                     break;
                 }
             }
-
-            // if event::read()?.is_key_press() {
-            //     break Ok(());
-            // }
         }
         ratatui::crossterm::execute!(
             terminal.backend_mut(),
@@ -399,7 +395,6 @@ pub fn render_game_board(frame: &mut Frame, area: Rect, state: &GameState) {
                 y2: 12.0,
                 color: Color::Blue,
             });
-            // .xxx.|.xxx.|.xxx.
 
             ctx.layer();
 
@@ -432,29 +427,7 @@ pub fn render_game_board(frame: &mut Frame, area: Rect, state: &GameState) {
                     }
                 }
             }
-            // // Draw the cross in the top right cell
-            // ctx.draw(&Line{x1: 9.0, y1: 3.0, x2: 11.0, y2: 5.0, color: Color::Green});
-            // ctx.draw(&Line{x1: 11.0, y1: 3.0, x2: 9.0, y2: 5.0, color: Color::Green});
-
-            // ctx.draw(&Line::new(0.0, 10.0, 10.0, 10.0, Color::Blue));
-            // ctx.draw(&Rectangle {
-            //     x: 10.0,
-            //     y: 20.0,
-            //     width: 10.0,
-            //     height: 10.0,
-            //     color: Color::Green,
-            // });
-            // ctx.draw(&Points {
-            //     coords: &[
-            //         (2.3522, 48.8566),    // Paris
-            //         (-122.3321, 47.6062), // Seattle
-            //         (-79.3837, 43.6511),  // Toronto
-            //         (32.8597, 39.9334),   // Ankara
-            //     ],
-            //     color: Color::Red,
-            // });
         });
-    
 
     frame.render_widget(canvas, area);
 }
