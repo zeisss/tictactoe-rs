@@ -2,7 +2,7 @@ use std::fmt;
 use std::time::Duration;
 
 use color_eyre::Result;
-use crossterm::event::{self, KeyCode, KeyEvent, KeyModifiers, poll};
+use crossterm::event::{self, KeyCode, KeyEvent, KeyModifiers, MouseEventKind, poll};
 use ratatui::Frame;
 use ratatui::layout::{Alignment, Constraint, Layout, Rect};
 use ratatui::style::{Color, Stylize};
@@ -14,6 +14,8 @@ use ratatui::widgets::canvas::{Canvas, Circle, Context, Line};
 // Name: Waldemar, James and Stephan's TicTacToe
 
 mod tictactoe {
+    use std::result::{Result, Result::Ok, Result::Err};
+
     #[derive(Debug, Copy, Clone, PartialEq)]
     pub enum Player {
         Naught,
@@ -30,11 +32,18 @@ mod tictactoe {
         Empty,
         PlayerOccupied(Player),
     }
+    #[derive(Debug, Copy, Clone, PartialEq)]
+    pub enum PlaceError {
+        InvalidCoordinates,
+        CellOccupied,
+        GameOver,
+    }
+
     #[derive(Debug)]
     pub struct GameState {
-        active_player: Player,
-        outcome: Option<Outcome>,
-        board: [[Cell; 3]; 3],
+        pub active_player: Player,
+        pub outcome: Option<Outcome>,
+        pub board: [[Cell; 3]; 3],
     }
 
     impl GameState {
@@ -46,15 +55,18 @@ mod tictactoe {
             }
         }
 
-        pub fn place(&mut self, x: usize, y: usize) {
+        pub fn place(&mut self, x: usize, y: usize) -> Result<(), PlaceError> {
             if x > 2 || y > 2 {
-                panic!("Invalid cell coordinates");
+                return Err(PlaceError::InvalidCoordinates);
+            }
+            if self.outcome.is_some() {
+                return Err(PlaceError::GameOver)
             }
 
             let cell = self.board[x][y];
             match cell {
                 Cell::PlayerOccupied(_) => {
-                    panic!("Cell is already occupied");
+                    return Err(PlaceError::CellOccupied);
                 }
                 Cell::Empty => {
                     self.board[x][y] = Cell::PlayerOccupied(self.active_player);
@@ -71,6 +83,7 @@ mod tictactoe {
             if let Some(outcome) = self.check_wincondition() {
                 self.outcome = Some(outcome);
             }
+            Ok(())
         }
 
         fn check_wincondition(&self) -> Option<Outcome> {
@@ -184,11 +197,13 @@ mod tictactoe {
 
 use tictactoe::GameState;
 
-const QUIT_KEY: KeyEvent = KeyEvent::new(KeyCode::Char('q'), KeyModifiers::NONE);
+const QUIT_KEY: KeyEvent = KeyEvent::new(KeyCode::Char('q'), KeyModifiers::SHIFT);
+
+
 
 #[derive(Debug)]
 struct App {
-    mouse_events: i32,
+    mouse_events_ignored: i32,
     running: bool,
     state: GameState,
 }
@@ -196,25 +211,42 @@ struct App {
 impl App {
     fn default() -> Self {
         Self {
-            mouse_events: 0,
+            mouse_events_ignored: 0,
             running: true,
             state: GameState::default(),
         }
     }
 
     fn goodbye(&mut self) {
-        println!("Saying goodbye after {} mouse events", self.mouse_events);
+        println!("Saying goodbye after {} mouse events", self.mouse_events_ignored);
         self.running = false
     }
 
     fn update(&mut self, event: event::Event) {
         match event {
-            event::Event::Mouse(_) => {
-                self.mouse_events += 1;
-                self.state.place(0, 0);
+            event::Event::Mouse(ev) if ev.kind == MouseEventKind::Down(event::MouseButton::Left) => {
+                println!("Mouse clicked: {:?}", ev);
+                self.mouse_events_ignored += 1;
+                // self.state.place(0, 0);
             }
             event::Event::Key(key) if key == QUIT_KEY => {
                 self.goodbye();
+            }
+            event::Event::Key(key) => {
+                match key.code {
+                KeyCode::Char('q')=> _ = self.state.place(0,2),
+                KeyCode::Char('w')=> _ = self.state.place(1,2),
+                KeyCode::Char('e')=> _ = self.state.place(2,2),
+
+                KeyCode::Char('a')=> _ = self.state.place(0,1),
+                KeyCode::Char('s')=> _ = self.state.place(1,1),
+                KeyCode::Char('d')=> _ = self.state.place(2,1),
+
+                KeyCode::Char('y') | KeyCode::Char('z') => _ = self.state.place(0,0),
+                KeyCode::Char('x')=> _ = self.state.place(1,0),
+                KeyCode::Char('c')=> _ = self.state.place(2,0),
+                _ => {},
+                }
             }
             _ => {}
         }
@@ -233,10 +265,13 @@ fn main() -> Result<()> {
             terminal.backend_mut(),
             ratatui::crossterm::event::EnableMouseCapture
         )?;
+        terminal.show_cursor()?;
 
         let mut app: App = App::default();
         while app.running {
-            terminal.draw(|f| render(f, &app))?;
+            terminal.draw(|f| render(f, &app) )?;
+            
+
             while app.running {
                 let ev = event::read()?;
                 app.update(ev);
@@ -269,7 +304,7 @@ fn render(frame: &mut Frame, app: &App) {
     let [area, sidebar] = main.layout(&horizontal);
 
     render_title(frame, top);
-    render_canvas(frame, area);
+    render_game_board(frame, area, &app.state);
     render_sidebar(frame, sidebar, &app);
 }
 
@@ -284,9 +319,14 @@ fn render_title(frame: &mut Frame, area: Rect) {
 // Render the current game status and player turn in the sidebar.
 fn render_sidebar(frame: &mut Frame, area: Rect, app: &App) {
     // let text = "Centered text\nwith multiple lines.\nCheck out the recipe!";
-    let counter = fmt::format(format_args!("{}", app.mouse_events));
-
-    let paragraph = Paragraph::new(counter)
+    let text : String = {
+        if app.state.outcome.is_some() {
+            format!("Game over! Outcome: {:?}", app.state.outcome.unwrap())
+        } else {
+            format!("Current player: {:?}", app.state.active_player)
+        }
+    };
+    let paragraph = Paragraph::new(text)
         .style(Color::White)
         .alignment(Alignment::Center);
 
@@ -303,6 +343,7 @@ pub fn render_circle(ctx: &mut Context, x: i8, y: i8) {
         color: Color::Red,
     });
 }
+
 pub fn render_cross(ctx: &mut Context, x: i8, y: i8) {
     let x = (x * 6 + 3) as f64;
     let y = (y * 6 + 3) as f64;
@@ -323,7 +364,7 @@ pub fn render_cross(ctx: &mut Context, x: i8, y: i8) {
 }
 
 /// Renders the canvas widget with various shapes and a map.
-pub fn render_canvas(frame: &mut Frame, area: Rect) {
+pub fn render_game_board(frame: &mut Frame, area: Rect, state: &GameState) {
     let canvas = Canvas::default()
         .x_bounds([0.0, 17.0])
         .y_bounds([0.0, 17.0])
@@ -362,16 +403,20 @@ pub fn render_canvas(frame: &mut Frame, area: Rect) {
 
             ctx.layer();
 
-            render_circle(ctx, 0, 0);
-            render_circle(ctx, 0, 2);
-            render_circle(ctx, 1, 1);
-            render_circle(ctx, 2, 0);
-            render_circle(ctx, 2, 2);
-            render_cross(ctx, 0, 1);
-            render_cross(ctx, 1, 0);
-            render_cross(ctx, 1, 2);
-            render_cross(ctx, 2, 1);
-
+            // Render Game board
+            for x in 0..3 {
+                for y in 0..3 {
+                    match state.board[x][y] {
+                        tictactoe::Cell::Empty => {
+                            ctx.print((x * 6 + 3) as f64, (y * 6 + 3) as f64, format!("{},{}", x, y));
+                        }
+                        tictactoe::Cell::PlayerOccupied(player) => match player {
+                            tictactoe::Player::Naught => render_circle(ctx, x as i8, y as i8),
+                            tictactoe::Player::Cross => render_cross(ctx, x as i8, y as i8),
+                        },
+                    }
+                }
+            }
             // // Draw the cross in the top right cell
             // ctx.draw(&Line{x1: 9.0, y1: 3.0, x2: 11.0, y2: 5.0, color: Color::Green});
             // ctx.draw(&Line{x1: 11.0, y1: 3.0, x2: 9.0, y2: 5.0, color: Color::Green});
@@ -394,6 +439,7 @@ pub fn render_canvas(frame: &mut Frame, area: Rect) {
             //     color: Color::Red,
             // });
         });
+    
 
     frame.render_widget(canvas, area);
 }
