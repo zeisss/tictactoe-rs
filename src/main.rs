@@ -145,11 +145,11 @@ mod tictactoe {
     fn test_game_state() {
         let mut game = GameState::default();
         assert_eq!(game.outcome, None);
-        game.place(0, 0); // Naught
-        game.place(1, 0); // Cross
-        game.place(0, 1); // Naught
-        game.place(1, 1); // Cross
-        game.place(0, 2); // Naught wins
+        game.place(0, 0).unwrap(); // Naught
+        game.place(1, 0).unwrap(); // Cross
+        game.place(0, 1).unwrap(); // Naught
+        game.place(1, 1).unwrap(); // Cross
+        game.place(0, 2).unwrap(); // Naught wins
         assert_eq!(game.outcome, Some(Outcome::NaughtWins));
     }
 
@@ -157,12 +157,12 @@ mod tictactoe {
     fn test_game_state_cross_wins() {
         let mut game = GameState::default();
         assert_eq!(game.outcome, None);
-        game.place(0, 0); // Naught
-        game.place(1, 0); // Cross
-        game.place(0, 1); // Naught
-        game.place(1, 1); // Cross
-        game.place(2, 2); // Naught
-        game.place(1, 2); // Cross wins
+        game.place(0, 0).unwrap(); // Naught
+        game.place(1, 0).unwrap(); // Cross
+        game.place(0, 1).unwrap(); // Naught
+        game.place(1, 1).unwrap(); // Cross
+        game.place(2, 2).unwrap(); // Naught
+        game.place(1, 2).unwrap(); // Cross wins
         assert_eq!(game.outcome, Some(Outcome::CrossWins));
     }
 
@@ -171,15 +171,15 @@ mod tictactoe {
         let mut game = GameState::default();
         assert_eq!(game.outcome, None);
 
-        game.place(0, 0); // Naught
-        game.place(1, 1); // Cross
-        game.place(2, 2); // Naught
-        game.place(0, 2); // Cross
-        game.place(2, 0); // Naught
-        game.place(2, 1); // Cross
-        game.place(1, 2); // Naught
-        game.place(1, 0); // Cross
-        game.place(0, 1); // Naught -> Draw
+        game.place(0, 0).unwrap(); // Naught
+        game.place(1, 1).unwrap(); // Cross
+        game.place(2, 2).unwrap(); // Naught
+        game.place(0, 2).unwrap(); // Cross
+        game.place(2, 0).unwrap(); // Naught
+        game.place(2, 1).unwrap(); // Cross
+        game.place(1, 2).unwrap(); // Naught
+        game.place(1, 0).unwrap(); // Cross
+        game.place(0, 1).unwrap(); // Naught -> Draw
 
         assert_eq!(game.outcome, Some(Outcome::Draw));
     }
@@ -224,17 +224,17 @@ impl App {
             }
             event::Event::Key(key) => {
                 match key.code {
-                KeyCode::Char('q')=> _ = self.state.place(0,2),
-                KeyCode::Char('w')=> _ = self.state.place(1,2),
-                KeyCode::Char('e')=> _ = self.state.place(2,2),
+                KeyCode::Char('q')=> self.state.place(0,2).unwrap(),
+                KeyCode::Char('w')=> self.state.place(1,2).unwrap(),
+                KeyCode::Char('e')=> self.state.place(2,2).unwrap(),
 
-                KeyCode::Char('a')=> _ = self.state.place(0,1),
-                KeyCode::Char('s')=> _ = self.state.place(1,1),
-                KeyCode::Char('d')=> _ = self.state.place(2,1),
+                KeyCode::Char('a')=> self.state.place(0,1).unwrap(),
+                KeyCode::Char('s')=> self.state.place(1,1).unwrap(),
+                KeyCode::Char('d')=> self.state.place(2,1).unwrap(),
 
-                KeyCode::Char('y') | KeyCode::Char('z') => _ = self.state.place(0,0),
-                KeyCode::Char('x')=> _ = self.state.place(1,0),
-                KeyCode::Char('c')=> _ = self.state.place(2,0),
+                KeyCode::Char('y') | KeyCode::Char('z') => self.state.place(0,0).unwrap(),
+                KeyCode::Char('x')=> self.state.place(1,0).unwrap(),
+                KeyCode::Char('c')=> self.state.place(2,0).unwrap(),
                 _ => {},
                 }
             }
