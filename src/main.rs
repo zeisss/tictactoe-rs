@@ -64,6 +64,10 @@ mod tictactoe {
             }
         }
 
+        pub fn get_cell(&self, pos: (usize, usize)) -> Cell {
+            return self.board[pos.0][pos.1]
+        }
+
         pub fn place(&mut self, x: usize, y: usize) -> Result<(), PlaceError> {
             if x > 2 || y > 2 {
                 return Err(PlaceError::InvalidCoordinates);
@@ -96,42 +100,31 @@ mod tictactoe {
         }
 
         fn check_wincondition(&self) -> Option<Outcome> {
-            // Check rows
-            for row in 0..3 {
-                if let Cell::PlayerOccupied(player) = self.board[row][0] {
-                    if self.board[row][1] == Cell::PlayerOccupied(player)
-                        && self.board[row][2] == Cell::PlayerOccupied(player)
-                    {
+            let valid_wins = vec![
+                // column
+                ((0,0), (0, 1), (0, 2)),
+                ((1,0), (1, 1), (1, 2)),
+                ((2,0), (2, 1), (2, 2)),
+
+                // rows
+                ((0,0), (1, 0), (2, 0)),
+                ((0,1), (1, 1), (2, 1)),
+                ((0,2), (1, 2), (2, 2)),
+
+                // diagonal
+                ((0,0), (1, 1), (0, 2)),
+                ((2,2), (1, 1), (2, 0)),
+            ];
+
+            for condition in valid_wins.iter() {
+                let first = self.get_cell(condition.0);
+                if let Cell::PlayerOccupied(player) = first {
+                    let second = self.get_cell(condition.1);
+                    let third = self.get_cell(condition.2);
+
+                    if first == second && second == third {
                         return Some(Outcome::from(player));
                     }
-                }
-            }
-
-            // Check columns
-            for col in 0..3 {
-                if let Cell::PlayerOccupied(player) = self.board[0][col] {
-                    if self.board[1][col] == Cell::PlayerOccupied(player)
-                        && self.board[2][col] == Cell::PlayerOccupied(player)
-                    {
-                        return Some(Outcome::from(player));
-                    }
-                }
-            }
-
-            // Check diagonals
-            if let Cell::PlayerOccupied(player) = self.board[0][0] {
-                if self.board[1][1] == Cell::PlayerOccupied(player)
-                    && self.board[2][2] == Cell::PlayerOccupied(player)
-                {
-                    return Some(Outcome::from(player));
-                }
-            }
-
-            if let Cell::PlayerOccupied(player) = self.board[0][2] {
-                if self.board[1][1] == Cell::PlayerOccupied(player)
-                    && self.board[2][0] == Cell::PlayerOccupied(player)
-                {
-                    return Some(Outcome::from(player));
                 }
             }
 
