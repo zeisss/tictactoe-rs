@@ -311,7 +311,7 @@ fn render(frame: &mut Frame, app: &App) {
 fn render_title(frame: &mut Frame, area: Rect) {
     let title = TextLine::from_iter([
         Span::from("Stephan, Waldemar and James' TicTacToe").bold(),
-        Span::from(" (Press 'q' to quit)"),
+        Span::from(" (Press 'Q' to quit)"),
     ]);
     frame.render_widget(title.centered(), area);
 }
@@ -408,7 +408,22 @@ pub fn render_game_board(frame: &mut Frame, area: Rect, state: &GameState) {
                 for y in 0..3 {
                     match state.board[x][y] {
                         tictactoe::Cell::Empty => {
-                            ctx.print((x * 6 + 3) as f64, (y * 6 + 3) as f64, format!("{},{}", x, y));
+                            let label = match (x, y) {
+                                (0, 2) => "q",
+                                (1, 2) => "w",
+                                (2, 2) => "e",
+
+                                (0, 1) => "a",
+                                (1, 1) => "s",
+                                (2, 1) => "d",
+
+                                (0, 0) => "y|z",
+                                (1, 0) => "x",
+                                (2, 0) => "c",
+                                _ => "_"
+                            };
+
+                             ctx.print((x * 6 + 3) as f64, (y * 6 + 3) as f64, label);
                         }
                         tictactoe::Cell::PlayerOccupied(player) => match player {
                             tictactoe::Player::Naught => render_circle(ctx, x as i8, y as i8),
