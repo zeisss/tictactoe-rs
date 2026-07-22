@@ -13,35 +13,37 @@ use ratatui::widgets::Paragraph;
 use ratatui::widgets::canvas::{Canvas, Circle, Context, Line};
 
 // Name: Waldemar, James and Stephan's TicTacToe
+const QUIT_KEY: KeyEvent = KeyEvent::new(KeyCode::Char('q'), KeyModifiers::NONE);
 
 #[derive(Debug)]
 struct App {
     mouse_events: i32,
+    running: bool,
 }
 
 impl App {
     fn default() -> Self {
-        Self { mouse_events: 0 }
+        Self { mouse_events: 0, running: true }
     }
-    fn good_byte(&self) {
+
+    fn goodbye(&mut self) {
         println!("Saying goodbye after {} mouse events", self.mouse_events);
+        self.running = false
+    }
+
+    fn update(&mut self, event: event::Event) {
+        match event {
+            event::Event::Mouse(_) => {
+                self.mouse_events += 1;
+            }
+            event::Event::Key(key) if key == QUIT_KEY => {
+                self.goodbye();
+            }
+            _ => {}
+        }
     }
 }
 
-const QUIT_KEY: KeyEvent = KeyEvent::new(KeyCode::Char('q'), KeyModifiers::NONE);
-fn update(app: &mut App, event: event::Event) -> bool {
-    match event {
-        event::Event::Mouse(_) => {
-            app.mouse_events += 1;
-        }
-        event::Event::Key(key) if key == QUIT_KEY => {
-            app.good_byte();
-            return true
-        }
-        _ => {}
-    }
-    false
-}
 
 fn main() -> Result<()> {
     color_eyre::install()?;
@@ -57,14 +59,11 @@ fn main() -> Result<()> {
         )?;
 
         let mut app: App = App::default();
-        'outer:
-        loop {
+        while app.running {
             terminal.draw(|f| render(f, &app))?;
-            loop {
+            while app.running {
                 let ev = event::read()?;
-                if update(&mut app, ev) {
-                    break 'outer;
-                }
+                app.update(ev);
                 if !poll(Duration::from_millis(48))? {
                     break
                 }
