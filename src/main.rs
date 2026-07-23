@@ -55,17 +55,21 @@ mod tictactoe {
         pub board: [[Cell; 3]; 3],
     }
 
-    impl GameState {
-        pub fn default() -> Self {
+    impl Default for GameState {
+        fn default() -> Self {
             Self {
                 active_player: Player::Naught,
                 outcome: None,
                 board: [[Cell::Empty; 3]; 3],
             }
         }
+    }
 
+    type WinCombination = ((usize, usize), (usize, usize), (usize, usize));
+
+    impl GameState {
         pub fn get_cell(&self, pos: (usize, usize)) -> Cell {
-            return self.board[pos.0][pos.1]
+            self.board[pos.0][pos.1]
         }
 
         pub fn place(&mut self, x: usize, y: usize) -> Result<(), PlaceError> {
@@ -100,20 +104,18 @@ mod tictactoe {
         }
 
         fn check_wincondition(&self) -> Option<Outcome> {
-            const VALID_WINS: [((usize, usize), (usize, usize), (usize, usize)); 8] = [
+            const VALID_WINS: [WinCombination; 8] = [
                 // column
-                ((0,0), (0, 1), (0, 2)),
-                ((1,0), (1, 1), (1, 2)),
-                ((2,0), (2, 1), (2, 2)),
-
+                ((0, 0), (0, 1), (0, 2)),
+                ((1, 0), (1, 1), (1, 2)),
+                ((2, 0), (2, 1), (2, 2)),
                 // rows
-                ((0,0), (1, 0), (2, 0)),
-                ((0,1), (1, 1), (2, 1)),
-                ((0,2), (1, 2), (2, 2)),
-
+                ((0, 0), (1, 0), (2, 0)),
+                ((0, 1), (1, 1), (2, 1)),
+                ((0, 2), (1, 2), (2, 2)),
                 // diagonal
-                ((0,0), (1, 1), (0, 2)),
-                ((2,2), (1, 1), (2, 0)),
+                ((0, 0), (1, 1), (0, 2)),
+                ((2, 2), (1, 1), (2, 0)),
             ];
 
             for condition in VALID_WINS.iter() {
@@ -291,7 +293,7 @@ fn render(frame: &mut Frame, app: &App) {
 
     render_title(frame, top);
     render_game_board(frame, area, &app.state);
-    render_sidebar(frame, sidebar, &app);
+    render_sidebar(frame, sidebar, app);
 }
 
 fn render_title(frame: &mut Frame, area: Rect) {
@@ -323,8 +325,8 @@ pub fn render_circle(ctx: &mut Context, x: i8, y: i8) {
     let x = (x * 6 + 3) as f64;
     let y = (y * 6 + 3) as f64;
     ctx.draw(&Circle {
-        x: x,
-        y: y,
+        x,
+        y,
         radius: 2.0,
         color: Color::Red,
     });
