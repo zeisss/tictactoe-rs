@@ -6,14 +6,14 @@ use ratatui::Frame;
 use ratatui::layout::{Alignment, Constraint, Layout, Rect};
 use ratatui::style::{Color, Stylize};
 use ratatui::symbols::Marker;
-use ratatui::text::{Line as TextLine, Span};
+use ratatui::text::{Line as TextLine, Span, Text};
 use ratatui::widgets::Paragraph;
 use ratatui::widgets::canvas::{Canvas, Circle, Context, Line};
 
 // Name: Waldemar, James and Stephan's TicTacToe
 
 mod tictactoe {
-    use std::result::{Result, Result::Ok, Result::Err};
+    use std::result::{Result, Result::Err, Result::Ok};
 
     #[derive(Debug, Copy, Clone, PartialEq)]
     pub enum Player {
@@ -30,8 +30,8 @@ mod tictactoe {
     impl From<Player> for Outcome {
         fn from(value: Player) -> Self {
             match value {
-            Player::Naught => Outcome::NaughtWins,
-            Player::Cross => Outcome::CrossWins,
+                Player::Naught => Outcome::NaughtWins,
+                Player::Cross => Outcome::CrossWins,
             }
         }
     }
@@ -77,7 +77,7 @@ mod tictactoe {
                 return Err(PlaceError::InvalidCoordinates);
             }
             if self.outcome.is_some() {
-                return Err(PlaceError::GameOver)
+                return Err(PlaceError::GameOver);
             }
 
             let cell = self.board[x][y];
@@ -187,36 +187,43 @@ mod tictactoe {
     }
 }
 
-use tictactoe::GameState;
+use tictactoe::{GameState, PlaceError};
 
 const QUIT_KEY: KeyEvent = KeyEvent::new(KeyCode::Char('q'), KeyModifiers::SHIFT);
-
-
 
 #[derive(Debug)]
 struct App {
     mouse_events_ignored: i32,
     running: bool,
     state: GameState,
+    last_place: std::result::Result<(), PlaceError>,
+}
+
+impl Default for App {
+    fn default() -> Self {
+        Self {
+            state: GameState::default(),
+            mouse_events_ignored: 0,
+            running: true,
+            last_place: Ok(()),
+        }
+    }
 }
 
 impl App {
-    fn default() -> Self {
-        Self {
-            mouse_events_ignored: 0,
-            running: true,
-            state: GameState::default(),
-        }
-    }
-
     fn goodbye(&mut self) {
-        println!("Saying goodbye after {} mouse events", self.mouse_events_ignored);
+        println!(
+            "Saying goodbye after {} mouse events",
+            self.mouse_events_ignored
+        );
         self.running = false
     }
 
     fn update(&mut self, event: event::Event) {
         match event {
-            event::Event::Mouse(ev) if ev.kind == MouseEventKind::Down(event::MouseButton::Left) => {
+            event::Event::Mouse(ev)
+                if ev.kind == MouseEventKind::Down(event::MouseButton::Left) =>
+            {
                 println!("Mouse clicked: {:?}", ev);
                 self.mouse_events_ignored += 1;
                 // self.state.place(0, 0);
@@ -224,22 +231,20 @@ impl App {
             event::Event::Key(key) if key == QUIT_KEY => {
                 self.goodbye();
             }
-            event::Event::Key(key) => {
-                match key.code {
-                KeyCode::Char('q')=> self.state.place(0,2).unwrap(),
-                KeyCode::Char('w')=> self.state.place(1,2).unwrap(),
-                KeyCode::Char('e')=> self.state.place(2,2).unwrap(),
+            event::Event::Key(key) => match key.code {
+                KeyCode::Char('q') => self.last_place = self.state.place(0, 2),
+                KeyCode::Char('w') => self.last_place = self.state.place(1, 2),
+                KeyCode::Char('e') => self.last_place = self.state.place(2, 2),
 
-                KeyCode::Char('a')=> self.state.place(0,1).unwrap(),
-                KeyCode::Char('s')=> self.state.place(1,1).unwrap(),
-                KeyCode::Char('d')=> self.state.place(2,1).unwrap(),
+                KeyCode::Char('a') => self.last_place = self.state.place(0, 1),
+                KeyCode::Char('s') => self.last_place = self.state.place(1, 1),
+                KeyCode::Char('d') => self.last_place = self.state.place(2, 1),
 
-                KeyCode::Char('y') | KeyCode::Char('z') => self.state.place(0,0).unwrap(),
-                KeyCode::Char('x')=> self.state.place(1,0).unwrap(),
-                KeyCode::Char('c')=> self.state.place(2,0).unwrap(),
-                _ => {},
-                }
-            }
+                KeyCode::Char('y') | KeyCode::Char('z') => self.last_place = self.state.place(0, 0),
+                KeyCode::Char('x') => self.last_place = self.state.place(1, 0),
+                KeyCode::Char('c') => self.last_place = self.state.place(2, 0),
+                _ => {}
+            },
             _ => {}
         }
     }
@@ -261,8 +266,7 @@ fn main() -> Result<()> {
 
         let mut app: App = App::default();
         while app.running {
-            terminal.draw(|f| render(f, &app) )?;
-            
+            terminal.draw(|f| render(f, &app))?;
 
             while app.running {
                 let ev = event::read()?;
@@ -307,14 +311,27 @@ fn render_title(frame: &mut Frame, area: Rect) {
 // Render the current game status and player turn in the sidebar.
 fn render_sidebar(frame: &mut Frame, area: Rect, app: &App) {
     // let text = "Centered text\nwith multiple lines.\nCheck out the recipe!";
-    let text : String = {
-        if app.state.outcome.is_some() {
-            format!("Game over! Outcome: {:?}", app.state.outcome.unwrap())
+    let text: Span = {
+        if let Some(outcome) = app.state.outcome {
+            format!("Game over! Outcome: {:?}", outcome).into()
         } else {
-            format!("Current player: {:?}", app.state.active_player)
+            format!("Current player: {:?}", app.state.active_player).into()
         }
     };
-    let paragraph = Paragraph::new(text)
+    let error_hint = {
+        if app
+            .last_place
+            .is_err_and(|err| err == PlaceError::CellOccupied)
+        {
+            "\nCell already occupied".red()
+        } else {
+            "".into()
+        }
+    };
+    // Paragraph::new(Line::from(vec!["Hello, ".into(), "world!".red()]));
+
+    let lines = ratatui::text::Line::from(vec![text, error_hint]);
+    let paragraph = Paragraph::new(Text::from(lines))
         .style(Color::White)
         .alignment(Alignment::Center);
 
@@ -407,10 +424,10 @@ pub fn render_game_board(frame: &mut Frame, area: Rect, state: &GameState) {
                                 (0, 0) => "y|z",
                                 (1, 0) => "x",
                                 (2, 0) => "c",
-                                _ => "_"
+                                _ => "_",
                             };
 
-                             ctx.print((x * 6 + 3) as f64, (y * 6 + 3) as f64, label);
+                            ctx.print((x * 6 + 3) as f64, (y * 6 + 3) as f64, label);
                         }
                         tictactoe::Cell::PlayerOccupied(player) => match player {
                             tictactoe::Player::Naught => render_circle(ctx, x as i8, y as i8),
