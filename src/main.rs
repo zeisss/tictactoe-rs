@@ -100,7 +100,7 @@ mod tictactoe {
         }
 
         fn check_wincondition(&self) -> Option<Outcome> {
-            let valid_wins = vec![
+            const VALID_WINS: [((usize, usize), (usize, usize), (usize, usize)); 8] = [
                 // column
                 ((0,0), (0, 1), (0, 2)),
                 ((1,0), (1, 1), (1, 2)),
@@ -116,7 +116,7 @@ mod tictactoe {
                 ((2,2), (1, 1), (2, 0)),
             ];
 
-            for condition in valid_wins.iter() {
+            for condition in VALID_WINS.iter() {
                 let first = self.get_cell(condition.0);
                 if let Cell::PlayerOccupied(player) = first {
                     let second = self.get_cell(condition.1);
