@@ -59,10 +59,9 @@ impl App {
                 );
 
                 match self.board.get_cell((x as usize, y as usize)) {
-                    Cell::PlayerOccupied(Player::Cross) => draw_cross_cell(&mut self.canvas, x, y),
-                    Cell::PlayerOccupied(Player::Naught) => {
-                        draw_naught_cell(&mut self.canvas, x, y)
-                    }
+                    Cell::PlayerOccupied(Player::Cross) => self.draw_cross_cell(x, y),
+                    Cell::PlayerOccupied(Player::Naught) => self.draw_naught_cell(x, y),
+
                     Cell::Empty => {
                         let label = match (x, y) {
                             (0, 0) => "Q",
@@ -190,38 +189,38 @@ impl App {
         self.last_placement = Ok(());
         self.board = GameState::default();
     }
-}
 
-fn draw_cross_cell(canvas: &mut Canvas<Window>, x: i32, y: i32) -> Result<(), sdl3::Error> {
-    canvas.set_draw_color(RED);
-    canvas.draw_line(
-        (x * CELL_SIZE + 5, y * CELL_SIZE + 5),
-        (x * CELL_SIZE + 190, y * CELL_SIZE + 190),
-    )?;
-    canvas.draw_line(
-        (x * CELL_SIZE + 5, y * CELL_SIZE + 190),
-        (x * CELL_SIZE + 190, y * CELL_SIZE + 5),
-    )
-}
+    fn draw_cross_cell(&mut self, x: i32, y: i32) -> Result<(), sdl3::Error> {
+        self.canvas.set_draw_color(RED);
+        self.canvas.draw_line(
+            (x * CELL_SIZE + 5, y * CELL_SIZE + 5),
+            (x * CELL_SIZE + 190, y * CELL_SIZE + 190),
+        )?;
+        self.canvas.draw_line(
+            (x * CELL_SIZE + 5, y * CELL_SIZE + 190),
+            (x * CELL_SIZE + 190, y * CELL_SIZE + 5),
+        )
+    }
 
-fn draw_naught_cell(canvas: &mut Canvas<Window>, x: i32, y: i32) -> Result<(), sdl3::Error> {
-    canvas.set_draw_color(GREEN);
-    canvas.draw_line(
-        (x * CELL_SIZE + 25, y * CELL_SIZE + 25),
-        (x * CELL_SIZE + 25, y * CELL_SIZE + 175),
-    )?;
-    canvas.draw_line(
-        (x * CELL_SIZE + 25, y * CELL_SIZE + 25),
-        (x * CELL_SIZE + 175, y * CELL_SIZE + 25),
-    )?;
-    canvas.draw_line(
-        (x * CELL_SIZE + 25, y * CELL_SIZE + 175),
-        (x * CELL_SIZE + 175, y * CELL_SIZE + 175),
-    )?;
-    canvas.draw_line(
-        (x * CELL_SIZE + 175, y * CELL_SIZE + 25),
-        (x * CELL_SIZE + 175, y * CELL_SIZE + 175),
-    )
+    fn draw_naught_cell(&mut self, x: i32, y: i32) -> Result<(), sdl3::Error> {
+        self.canvas.set_draw_color(GREEN);
+        self.canvas.draw_line(
+            (x * CELL_SIZE + 25, y * CELL_SIZE + 25),
+            (x * CELL_SIZE + 25, y * CELL_SIZE + 175),
+        )?;
+        self.canvas.draw_line(
+            (x * CELL_SIZE + 25, y * CELL_SIZE + 25),
+            (x * CELL_SIZE + 175, y * CELL_SIZE + 25),
+        )?;
+        self.canvas.draw_line(
+            (x * CELL_SIZE + 25, y * CELL_SIZE + 175),
+            (x * CELL_SIZE + 175, y * CELL_SIZE + 175),
+        )?;
+        self.canvas.draw_line(
+            (x * CELL_SIZE + 175, y * CELL_SIZE + 25),
+            (x * CELL_SIZE + 175, y * CELL_SIZE + 175),
+        )
+    }
 }
 
 pub fn main() {
