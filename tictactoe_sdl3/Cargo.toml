@@ -1,0 +1,7 @@
+[package]
+name = "tictactoe_sdl3"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+tictactoe_ratatui = { path = "../tictactoe_ratatui" }

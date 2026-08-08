@@ -1,0 +1,172 @@
+use std::result::{Result, Result::Err, Result::Ok};
+
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum Player {
+    Naught,
+    Cross,
+}
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum Outcome {
+    NaughtWins,
+    CrossWins,
+    Draw,
+}
+
+impl From<Player> for Outcome {
+    fn from(value: Player) -> Self {
+        match value {
+            Player::Naught => Outcome::NaughtWins,
+            Player::Cross => Outcome::CrossWins,
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum Cell {
+    Empty,
+    PlayerOccupied(Player),
+}
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum PlaceError {
+    InvalidCoordinates,
+    CellOccupied,
+    GameOver,
+}
+
+#[derive(Debug)]
+pub struct GameState {
+    pub active_player: Player,
+    pub outcome: Option<Outcome>,
+    pub board: [[Cell; 3]; 3],
+}
+
+impl Default for GameState {
+    fn default() -> Self {
+        Self {
+            active_player: Player::Naught,
+            outcome: None,
+            board: [[Cell::Empty; 3]; 3],
+        }
+    }
+}
+
+type WinCombination = ((usize, usize), (usize, usize), (usize, usize));
+
+impl GameState {
+    pub fn get_cell(&self, pos: (usize, usize)) -> Cell {
+        self.board[pos.0][pos.1]
+    }
+
+    pub fn place(&mut self, x: usize, y: usize) -> Result<(), PlaceError> {
+        if x > 2 || y > 2 {
+            return Err(PlaceError::InvalidCoordinates);
+        }
+        if self.outcome.is_some() {
+            return Err(PlaceError::GameOver);
+        }
+
+        let cell = self.board[x][y];
+        match cell {
+            Cell::PlayerOccupied(_) => {
+                return Err(PlaceError::CellOccupied);
+            }
+            Cell::Empty => {
+                self.board[x][y] = Cell::PlayerOccupied(self.active_player);
+            }
+        }
+
+        // Swap active player
+        self.active_player = match self.active_player {
+            Player::Naught => Player::Cross,
+            Player::Cross => Player::Naught,
+        };
+
+        // check wincondition
+        if let Some(outcome) = self.check_wincondition() {
+            self.outcome = Some(outcome);
+        }
+        Ok(())
+    }
+
+    fn check_wincondition(&self) -> Option<Outcome> {
+        const VALID_WINS: [WinCombination; 8] = [
+            // column
+            ((0, 0), (0, 1), (0, 2)),
+            ((1, 0), (1, 1), (1, 2)),
+            ((2, 0), (2, 1), (2, 2)),
+            // rows
+            ((0, 0), (1, 0), (2, 0)),
+            ((0, 1), (1, 1), (2, 1)),
+            ((0, 2), (1, 2), (2, 2)),
+            // diagonal
+            ((0, 0), (1, 1), (2, 2)),
+            ((0, 2), (1, 1), (2, 0)),
+        ];
+
+        for condition in VALID_WINS.iter() {
+            let first = self.get_cell(condition.0);
+            if let Cell::PlayerOccupied(player) = first {
+                let second = self.get_cell(condition.1);
+                let third = self.get_cell(condition.2);
+
+                if first == second && second == third {
+                    return Some(Outcome::from(player));
+                }
+            }
+        }
+
+        // Check for draw
+        if self
+            .board
+            .iter()
+            .all(|row| row.iter().all(|&cell| cell != Cell::Empty))
+        {
+            return Some(Outcome::Draw);
+        }
+
+        None
+    }
+}
+
+#[test]
+fn test_game_state() {
+    let mut game = GameState::default();
+    assert_eq!(game.outcome, None);
+    game.place(0, 0).unwrap(); // Naught
+    game.place(1, 0).unwrap(); // Cross
+    game.place(0, 1).unwrap(); // Naught
+    game.place(1, 1).unwrap(); // Cross
+    game.place(0, 2).unwrap(); // Naught wins
+    assert_eq!(game.outcome, Some(Outcome::NaughtWins));
+}
+
+#[test]
+fn test_game_state_cross_wins() {
+    let mut game = GameState::default();
+    assert_eq!(game.outcome, None);
+    game.place(0, 0).unwrap(); // Naught
+    game.place(1, 0).unwrap(); // Cross
+    game.place(0, 1).unwrap(); // Naught
+    game.place(1, 1).unwrap(); // Cross
+    game.place(2, 2).unwrap(); // Naught
+    game.place(1, 2).unwrap(); // Cross wins
+    assert_eq!(game.outcome, Some(Outcome::CrossWins));
+}
+
+#[test]
+fn test_game_state_draw() {
+    let mut game = GameState::default();
+    assert_eq!(game.outcome, None);
+
+    game.place(0, 0).unwrap(); // Naught
+    game.place(1, 1).unwrap(); // Cross
+    game.place(2, 2).unwrap(); // Naught
+    game.place(0, 2).unwrap(); // Cross
+    game.place(2, 0).unwrap(); // Naught
+    game.place(2, 1).unwrap(); // Cross
+    game.place(1, 2).unwrap(); // Naught
+    game.place(1, 0).unwrap(); // Cross
+    game.place(0, 1).unwrap(); // Naught -> Draw
+
+    assert_eq!(game.outcome, Some(Outcome::Draw));
+}
