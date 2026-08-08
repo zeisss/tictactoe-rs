@@ -10,6 +10,10 @@ permissions:
 env:
   BIN_NAME: tictactoe-rs
 
+defaults:
+  run:
+    working-directory: ./tictactoe_ratatui
+
 jobs:
   test:
     name: Test
