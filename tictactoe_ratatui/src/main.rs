@@ -12,7 +12,7 @@ use ratatui::widgets::canvas::{Canvas, Circle, Context, Line};
 
 // Name: Waldemar, James and Stephan's TicTacToe
 
-mod tictactoe {
+pub mod tictactoe {
     use std::result::{Result, Result::Err, Result::Ok};
 
     #[derive(Debug, Copy, Clone, PartialEq)]
