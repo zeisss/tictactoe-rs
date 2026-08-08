@@ -5,4 +5,5 @@ edition = "2024"
 
 [dependencies]
 sdl3 = { version = "0.18.4", features = ["build-from-source"] }
+sdl3-sys = { version = "0.6.8", features = ["build-from-source"] }
 tictactoe_ratatui = { path = "../tictactoe_ratatui" }
