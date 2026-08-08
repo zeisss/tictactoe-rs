@@ -1,7 +1,7 @@
 use tictactoe_ratatui::tictactoe::{Cell, GameState, Outcome, PlaceError, Player};
 
 use sdl3::event::Event;
-use sdl3::keyboard::Keycode;
+use sdl3::keyboard::{Keycode, Scancode, Mod};
 use sdl3::pixels::Color;
 use sdl3::render::{Canvas, FPoint};
 use sdl3::video::Window;
@@ -118,11 +118,17 @@ impl App {
             
         };
 
+        // Help text bottom right
+        self.canvas.set_draw_color(BLACK);
+        self.canvas.draw_debug_text("Shift+R: Reset board", (AREA_X, 550.0));
+        self.canvas.draw_debug_text("Esc: Quit game", (AREA_X, 570.0));
+
         self.canvas.present();
     }
 
     fn process_inputs(&mut self, event_pump: &mut sdl3::EventPump) {
         for event in event_pump.poll_iter() {
+
             match event {
                 Event::Quit { .. }
                 | Event::KeyDown {
@@ -130,22 +136,33 @@ impl App {
                     ..
                 } => self.quit = true,
 
+                // Reset
+                Event::KeyDown {scancode: Some(Scancode::R), keymod: keymod, .. } if keymod.contains(Mod::LSHIFTMOD) => self.reset_board(),
+
                 // Cell inputs
-                Event::KeyDown {keycode: Some(Keycode::Q), .. } => self.last_placement = self.board.place(0,0),
-                Event::KeyDown {keycode: Some(Keycode::W), .. } => self.last_placement = self.board.place(1,0),
-                Event::KeyDown {keycode: Some(Keycode::E), .. } => self.last_placement = self.board.place(2,0),
+                // Scancode since we don't care about what is printed on the keycap, we want the physical button layout
+                // See https://wiki.libsdl.org/SDL3/BestKeyboardPractices#the-101-button-joystick
+                Event::KeyDown {scancode: Some(Scancode::Q), .. } => self.last_placement = self.board.place(0,0),
+                Event::KeyDown {scancode: Some(Scancode::W), .. } => self.last_placement = self.board.place(1,0),
+                Event::KeyDown {scancode: Some(Scancode::E), .. } => self.last_placement = self.board.place(2,0),
 
-                Event::KeyDown {keycode: Some(Keycode::A), .. } => self.last_placement = self.board.place(0,1),
-                Event::KeyDown {keycode: Some(Keycode::S), .. } => self.last_placement = self.board.place(1,1),
-                Event::KeyDown {keycode: Some(Keycode::D), .. } => self.last_placement = self.board.place(2,1),
+                Event::KeyDown {scancode: Some(Scancode::A), .. } => self.last_placement = self.board.place(0,1),
+                Event::KeyDown {scancode: Some(Scancode::S), .. } => self.last_placement = self.board.place(1,1),
+                Event::KeyDown {scancode: Some(Scancode::D), .. } => self.last_placement = self.board.place(2,1),
 
-                Event::KeyDown {keycode: Some(Keycode::Y), .. } | Event::KeyDown {keycode: Some(Keycode::Z), .. } => self.last_placement = self.board.place(0,2),
-                Event::KeyDown {keycode: Some(Keycode::X), .. } => self.last_placement = self.board.place(1,2),
-                Event::KeyDown {keycode: Some(Keycode::C), .. } => self.last_placement = self.board.place(2,2),
+                Event::KeyDown {scancode: Some(Scancode::Z), .. } => self.last_placement = self.board.place(0,2),
+                Event::KeyDown {scancode: Some(Scancode::X), .. } => self.last_placement = self.board.place(1,2),
+                Event::KeyDown {scancode: Some(Scancode::C), .. } => self.last_placement = self.board.place(2,2),
 
                 _ => {}
             }
         }
+    }
+
+    fn reset_board(&mut self) {
+        println!("RESET GAME");
+        self.last_placement = Ok(());
+        self.board = GameState::default();
     }
 }
 
@@ -199,21 +216,14 @@ pub fn main() {
     };
 
     app.board.place(0, 0);
-    app.board.place(2, 1);
 
-    println!("Hello, world!");
-    println!("{:?}", app.board);
-
-    app.render();
+    // app.render();
 
     let mut event_pump = sdl_context.event_pump().unwrap();
     while !app.quit {
         app.process_inputs(&mut event_pump);
-
         app.render();
-
         // The rest of the game loop goes here...
-
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
 }
