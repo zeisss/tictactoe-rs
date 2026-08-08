@@ -200,4 +200,12 @@ mod tests {
         game.place(0, 0).unwrap(); // Cross
         assert_eq!(game.place(1, 1), Err(PlaceError::CellOccupied));
     }
+
+    #[test]
+    fn test_place_fails_illegal_coordinates() {
+        let mut game = GameState::default();
+        assert_eq!(game.place(0, 3), Err(PlaceError::InvalidCoordinates));
+        assert_eq!(game.place(3, 3), Err(PlaceError::InvalidCoordinates));
+        assert_eq!(game.place(255, 255), Err(PlaceError::InvalidCoordinates));
+    }
 }
