@@ -236,7 +236,7 @@ pub fn render_game_board(frame: &mut Frame, area: Rect, state: &GameState) {
             // Render Game board
             for x in 0..3 {
                 for y in 0..3 {
-                    match state.board[x][y] {
+                    match state.get_cell((x, y)) {
                         tictactoe::Cell::Empty => {
                             let label = match (x, y) {
                                 (0, 2) => "q",

@@ -49,7 +49,7 @@ pub enum PlaceError {
 pub struct GameState {
     pub active_player: Player,
     pub outcome: Option<Outcome>,
-    pub board: [[Cell; 3]; 3],
+    pub board: [Cell; 9],
 }
 
 impl Default for GameState {
@@ -57,7 +57,7 @@ impl Default for GameState {
         Self {
             active_player: Player::Naught,
             outcome: None,
-            board: [[Cell::Empty; 3]; 3],
+            board: [Cell::Empty; 9],
         }
     }
 }
@@ -66,7 +66,18 @@ type WinCombination = ((usize, usize), (usize, usize), (usize, usize));
 
 impl GameState {
     pub fn get_cell(&self, pos: (usize, usize)) -> Cell {
-        self.board[pos.0][pos.1]
+        if pos.0 > 2 || pos.1 > 2 {
+            panic!("Illegal Coordinate");
+        }
+        self.board[pos.0 + 3 * pos.1]
+    }
+
+    // private use only
+    fn get_cell_mut(&mut self, pos: (usize, usize)) -> &mut Cell {
+        if pos.0 > 2 || pos.1 > 2 {
+            panic!("Illegal Coordinate");
+        }
+        &mut self.board[pos.0 + 3 * pos.1]
     }
 
     pub fn place(&mut self, x: usize, y: usize) -> Result<(), PlaceError> {
@@ -77,13 +88,12 @@ impl GameState {
             return Err(PlaceError::GameOver);
         }
 
-        let cell = self.board[x][y];
-        match cell {
+        match self.get_cell((x, y)) {
             Cell::PlayerOccupied(_) => {
                 return Err(PlaceError::CellOccupied);
             }
             Cell::Empty => {
-                self.board[x][y] = Cell::PlayerOccupied(self.active_player);
+                *self.get_cell_mut((x, y)) = Cell::PlayerOccupied(self.active_player);
             }
         }
 
@@ -131,7 +141,7 @@ impl GameState {
         if self
             .board
             .iter()
-            .all(|row| row.iter().all(|&cell| cell != Cell::Empty))
+            .all(|cell| *cell != Cell::Empty)
         {
             return Some(Outcome::Draw);
         }
@@ -143,6 +153,21 @@ impl GameState {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_default_gives_empty_board() {
+        let game = GameState::default();
+        assert!(game.outcome.is_none(), "Expected outcome to be empty");
+        assert!(game.board.iter().all(|c| *c == Cell::Empty), "Expected only empty cells");
+
+    }
+
+    #[test]
+    fn test_place_occupies_cell() {
+        let mut game = GameState::default();
+        game.place(0,0).unwrap();
+        assert_eq!(Cell::PlayerOccupied(Player::Naught), game.get_cell((0,0)));
+    }
 
     #[test]
     fn test_game_state() {
@@ -207,5 +232,18 @@ mod tests {
         assert_eq!(game.place(0, 3), Err(PlaceError::InvalidCoordinates));
         assert_eq!(game.place(3, 3), Err(PlaceError::InvalidCoordinates));
         assert_eq!(game.place(255, 255), Err(PlaceError::InvalidCoordinates));
+    }
+
+    #[test]
+    fn test_place_fails_on_gameover() {
+        let mut game = GameState::default();
+        game.place(0,0).unwrap();
+        game.place(0,1).unwrap();
+        game.place(1,0).unwrap();
+        game.place(1,1).unwrap();
+        game.place(2,0).unwrap();
+
+        assert_eq!(game.place(2,1), Err(PlaceError::GameOver));
+        assert!(game.outcome.is_some(), "Expected game to be over");
     }
 }
