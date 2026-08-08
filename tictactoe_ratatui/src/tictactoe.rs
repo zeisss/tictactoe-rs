@@ -1,10 +1,22 @@
 use std::result::{Result, Result::Err, Result::Ok};
+use std::fmt;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Player {
     Naught,
     Cross,
 }
+
+impl fmt::Display for Player {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if *self == Player::Naught {
+            write!(f, "Naught")
+        } else {
+            write!(f, "Cross")
+        }
+    }
+}
+
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Outcome {
     NaughtWins,
