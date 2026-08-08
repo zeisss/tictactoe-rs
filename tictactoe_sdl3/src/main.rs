@@ -112,16 +112,15 @@ impl App {
 
                 if let Err(error) = self.last_placement {
                     self.canvas.set_draw_color(RED);
-                    self.canvas.draw_debug_text(format!("Error: {:?}", error).as_str(), (AREA_X, 30.0));
+                    self.canvas.draw_debug_text(format!("Error: {:?}", error).as_str(), (AREA_X, 30.0)).unwrap();
                 };
             }
-            
         };
 
         // Help text bottom right
         self.canvas.set_draw_color(BLACK);
-        self.canvas.draw_debug_text("Shift+R: Reset board", (AREA_X, 550.0));
-        self.canvas.draw_debug_text("Esc: Quit game", (AREA_X, 570.0));
+        self.canvas.draw_debug_text("Shift+R: Reset board", (AREA_X, 550.0)).unwrap();
+        self.canvas.draw_debug_text("Esc: Quit game", (AREA_X, 570.0)).unwrap();
 
         self.canvas.present();
     }
@@ -137,7 +136,7 @@ impl App {
                 } => self.quit = true,
 
                 // Reset
-                Event::KeyDown {scancode: Some(Scancode::R), keymod: keymod, .. } if keymod.contains(Mod::LSHIFTMOD) => self.reset_board(),
+                Event::KeyDown {scancode: Some(Scancode::R), keymod, .. } if keymod.contains(Mod::LSHIFTMOD) => self.reset_board(),
 
                 // Cell inputs
                 // Scancode since we don't care about what is printed on the keycap, we want the physical button layout
@@ -214,10 +213,6 @@ pub fn main() {
         canvas: window.into_canvas(),
         last_placement: Ok(()),
     };
-
-    app.board.place(0, 0);
-
-    // app.render();
 
     let mut event_pump = sdl_context.event_pump().unwrap();
     while !app.quit {
