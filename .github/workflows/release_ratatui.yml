@@ -8,7 +8,7 @@ permissions:
   contents: write
 
 env:
-  BIN_NAME: tictactoe-rs
+  BIN_NAME: tictactoe_ratatui
 
 defaults:
   run:
