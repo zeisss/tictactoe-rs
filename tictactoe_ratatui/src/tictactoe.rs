@@ -1,5 +1,5 @@
-use std::result::{Result, Result::Err, Result::Ok};
 use std::fmt;
+use std::result::{Result, Result::Err, Result::Ok};
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Player {
@@ -140,45 +140,64 @@ impl GameState {
     }
 }
 
-#[test]
-fn test_game_state() {
-    let mut game = GameState::default();
-    assert_eq!(game.outcome, None);
-    game.place(0, 0).unwrap(); // Naught
-    game.place(1, 0).unwrap(); // Cross
-    game.place(0, 1).unwrap(); // Naught
-    game.place(1, 1).unwrap(); // Cross
-    game.place(0, 2).unwrap(); // Naught wins
-    assert_eq!(game.outcome, Some(Outcome::NaughtWins));
-}
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-#[test]
-fn test_game_state_cross_wins() {
-    let mut game = GameState::default();
-    assert_eq!(game.outcome, None);
-    game.place(0, 0).unwrap(); // Naught
-    game.place(1, 0).unwrap(); // Cross
-    game.place(0, 1).unwrap(); // Naught
-    game.place(1, 1).unwrap(); // Cross
-    game.place(2, 2).unwrap(); // Naught
-    game.place(1, 2).unwrap(); // Cross wins
-    assert_eq!(game.outcome, Some(Outcome::CrossWins));
-}
+    #[test]
+    fn test_game_state() {
+        let mut game = GameState::default();
+        assert_eq!(game.outcome, None);
+        game.place(0, 0).unwrap(); // Naught
+        game.place(1, 0).unwrap(); // Cross
+        game.place(0, 1).unwrap(); // Naught
+        game.place(1, 1).unwrap(); // Cross
+        game.place(0, 2).unwrap(); // Naught wins
+        assert_eq!(game.outcome, Some(Outcome::NaughtWins));
+    }
 
-#[test]
-fn test_game_state_draw() {
-    let mut game = GameState::default();
-    assert_eq!(game.outcome, None);
+    #[test]
+    fn test_game_state_cross_wins() {
+        let mut game = GameState::default();
+        assert_eq!(game.outcome, None);
+        game.place(0, 0).unwrap(); // Naught
+        game.place(1, 0).unwrap(); // Cross
+        game.place(0, 1).unwrap(); // Naught
+        game.place(1, 1).unwrap(); // Cross
+        game.place(2, 2).unwrap(); // Naught
+        game.place(1, 2).unwrap(); // Cross wins
+        assert_eq!(game.outcome, Some(Outcome::CrossWins));
+    }
 
-    game.place(0, 0).unwrap(); // Naught
-    game.place(1, 1).unwrap(); // Cross
-    game.place(2, 2).unwrap(); // Naught
-    game.place(0, 2).unwrap(); // Cross
-    game.place(2, 0).unwrap(); // Naught
-    game.place(2, 1).unwrap(); // Cross
-    game.place(1, 2).unwrap(); // Naught
-    game.place(1, 0).unwrap(); // Cross
-    game.place(0, 1).unwrap(); // Naught -> Draw
+    #[test]
+    fn test_game_state_draw() {
+        let mut game = GameState::default();
+        assert_eq!(game.outcome, None);
 
-    assert_eq!(game.outcome, Some(Outcome::Draw));
+        game.place(0, 0).unwrap(); // Naught
+        game.place(1, 1).unwrap(); // Cross
+        game.place(2, 2).unwrap(); // Naught
+        game.place(0, 2).unwrap(); // Cross
+        game.place(2, 0).unwrap(); // Naught
+        game.place(2, 1).unwrap(); // Cross
+        game.place(1, 2).unwrap(); // Naught
+        game.place(1, 0).unwrap(); // Cross
+        game.place(0, 1).unwrap(); // Naught -> Draw
+
+        assert_eq!(game.outcome, Some(Outcome::Draw));
+    }
+
+    #[test]
+    fn test_place_fails_on_occupied() {
+        // Other player cannot occupy the same space
+        let mut game = GameState::default();
+        game.place(1, 1).unwrap(); // Naught
+        assert_eq!(game.place(1, 1), Err(PlaceError::CellOccupied));
+
+        // Neither can you overwrite your own space
+        let mut game = GameState::default();
+        game.place(1, 1).unwrap(); // Naught
+        game.place(0, 0).unwrap(); // Cross
+        assert_eq!(game.place(1, 1), Err(PlaceError::CellOccupied));
+    }
 }
