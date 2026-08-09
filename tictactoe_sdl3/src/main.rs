@@ -234,15 +234,15 @@ use sdl3_sys;
 fn key_map_table() -> HashMap<Scancode, String> {
     let mut key_map = HashMap::new();
 
-    key_map.insert(Scancode::Q, Keycode::from_scancode(Scancode::Q, sdl3_sys::keycode::SDL_Keymod::NONE, true).unwrap().to_string());
-    key_map.insert(Scancode::W, Keycode::from_scancode(Scancode::W, sdl3_sys::keycode::SDL_Keymod::NONE, true).unwrap().to_string());
-    key_map.insert(Scancode::E, Keycode::from_scancode(Scancode::E, sdl3_sys::keycode::SDL_Keymod::NONE, true).unwrap().to_string());
-    key_map.insert(Scancode::A, Keycode::from_scancode(Scancode::A, sdl3_sys::keycode::SDL_Keymod::NONE, true).unwrap().to_string());
-    key_map.insert(Scancode::S, Keycode::from_scancode(Scancode::S, sdl3_sys::keycode::SDL_Keymod::NONE, true).unwrap().to_string());
-    key_map.insert(Scancode::D, Keycode::from_scancode(Scancode::D, sdl3_sys::keycode::SDL_Keymod::NONE, true).unwrap().to_string());
-    key_map.insert(Scancode::Z, Keycode::from_scancode(Scancode::Z, sdl3_sys::keycode::SDL_Keymod::NONE, true).unwrap().to_string());
-    key_map.insert(Scancode::X, Keycode::from_scancode(Scancode::X, sdl3_sys::keycode::SDL_Keymod::NONE, true).unwrap().to_string());
-    key_map.insert(Scancode::C, Keycode::from_scancode(Scancode::C, sdl3_sys::keycode::SDL_Keymod::NONE, true).unwrap().to_string());
+    key_map.insert(Scancode::Q, Keycode::from_scancode(Scancode::Q, sdl3_sys::keycode::SDL_Keymod::NONE, true).unwrap().name());
+    key_map.insert(Scancode::W, Keycode::from_scancode(Scancode::W, sdl3_sys::keycode::SDL_Keymod::NONE, true).unwrap().name());
+    key_map.insert(Scancode::E, Keycode::from_scancode(Scancode::E, sdl3_sys::keycode::SDL_Keymod::NONE, true).unwrap().name());
+    key_map.insert(Scancode::A, Keycode::from_scancode(Scancode::A, sdl3_sys::keycode::SDL_Keymod::NONE, true).unwrap().name());
+    key_map.insert(Scancode::S, Keycode::from_scancode(Scancode::S, sdl3_sys::keycode::SDL_Keymod::NONE, true).unwrap().name());
+    key_map.insert(Scancode::D, Keycode::from_scancode(Scancode::D, sdl3_sys::keycode::SDL_Keymod::NONE, true).unwrap().name());
+    key_map.insert(Scancode::Z, Keycode::from_scancode(Scancode::Z, sdl3_sys::keycode::SDL_Keymod::NONE, true).unwrap().name());
+    key_map.insert(Scancode::X, Keycode::from_scancode(Scancode::X, sdl3_sys::keycode::SDL_Keymod::NONE, true).unwrap().name());
+    key_map.insert(Scancode::C, Keycode::from_scancode(Scancode::C, sdl3_sys::keycode::SDL_Keymod::NONE, true).unwrap().name());
 
     key_map
 }
