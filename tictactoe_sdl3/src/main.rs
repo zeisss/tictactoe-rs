@@ -102,11 +102,17 @@ impl App {
                 self.canvas
                     .draw_debug_text(&self.board.active_player.to_string(), (AREA_X, 20.0))?;
 
+                let mut action_helper = 40.0;
                 if let Err(error) = self.last_placement {
                     self.canvas.set_draw_color(RED);
                     self.canvas
                         .draw_debug_text(format!("Error: {:?}", error).as_str(), (AREA_X, 30.0))?;
+                    action_helper += 10.0;
                 };
+
+                self.canvas.set_draw_color(BLACK);
+                self.canvas.draw_debug_text("Press one of the", (AREA_X, action_helper))?;
+                self.canvas.draw_debug_text("indicated keys", (AREA_X, action_helper + 10.0))?;
             }
         };
 
