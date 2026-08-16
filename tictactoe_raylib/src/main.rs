@@ -1,6 +1,17 @@
-use raylib::prelude::*;
+use raylib::{
+    ffi::{Rectangle}, prelude::*,
+};
 
 use tictactoe_ratatui::tictactoe::{Cell, GameState, Outcome, PlaceError, Player, WinCombination};
+
+#[derive(Debug)]
+enum Screen {
+    Menu,
+    LocalPlay,
+    ServerMode,
+    ClientMode,
+    Quit,
+}
 
 fn main() {
     let (mut rl, thread) = raylib::init()
@@ -8,19 +19,90 @@ fn main() {
         .title("TicTacToe in Rust + Raylib")
         .build();
     rl.set_target_fps(30);
+    rl.set_exit_key(None);
+    let mut screen = Screen::Menu;
 
     let key_bindings = KeyBinding::from_raylib_handle(&mut rl);
+
+    loop {
+        println!("Entering screen {:?}", screen);
+        screen = match screen {
+            Screen::Menu => run_menu_screen(&mut rl, &thread),
+            Screen::LocalPlay => run_local_play_screen(&mut rl, &thread, &key_bindings),
+            Screen::ServerMode => todo!("Not implemented yet"),
+            Screen::ClientMode => todo!("Not implemented yet"),
+            Screen::Quit => break,
+        };
+        println!("Next screen: {:?}", screen);
+        
+        // Draw one frame in black to clear the inputs, otherwise the Escape key pressed on the game screen
+        // would immediately be read + handled on the menu as well.
+        rl.draw(&thread, |mut d| {
+            d.clear_background(Color::WHITE);
+        });
+    }
+}
+
+// Main Menu
+fn run_menu_screen(rl: &mut RaylibHandle, thread: &RaylibThread) -> Screen {
+    let local_play = Rectangle::new(300.0, 350.0, 200.0, 40.0);
+    let server_mode = Rectangle::new(300.0, 400.0, 200.0, 40.0);
+    let client_mode = Rectangle::new(300.0, 450.0, 200.0, 40.0);
+    let quit_game = Rectangle::new(300.0, 500.0, 200.0, 40.0);
+
+    while !rl.window_should_close() {
+        // Keyboard Shortcuts
+        if rl.is_key_pressed(KeyboardKey::KEY_ESCAPE) {
+            return Screen::Quit;
+        } else if rl.is_key_pressed(KeyboardKey::KEY_ONE) {
+            return Screen::LocalPlay;
+        } else if rl.is_key_pressed(KeyboardKey::KEY_TWO) {
+            return Screen::ServerMode;
+        } else if rl.is_key_pressed(KeyboardKey::KEY_THREE) {
+            return Screen::ClientMode;
+        }
+
+        // Rendering + GuiButton handling
+        let mut d = rl.begin_drawing(thread);
+        d.clear_background(Color::WHITE);
+        d.draw_text("Tic Tac Toe", 300, 200, 40, Color::BLACK);
+        d.draw_text("in Rust + Raylib", 300, 300, 30, Color::BLACK);
+
+        if d.gui_button(local_play,"[1] Local Play") {
+            return Screen::LocalPlay;
+        }
+        if d.gui_button(server_mode, "[2] Server Mode") {
+            return Screen::ServerMode;
+        }
+        if d.gui_button(client_mode, "[3] Client Mode") {
+            return Screen::ClientMode;
+        }
+        if d.gui_button(quit_game, "Quit App") {
+            return Screen::LocalPlay;
+        }
+    }
+
+    Screen::Quit
+}
+
+// Local Play
+fn run_local_play_screen(
+    rl: &mut RaylibHandle,
+    thread: &RaylibThread,
+    key_bindings: &KeyBinding,
+) -> Screen {
     let mut game = GameState::default();
     let mut last_placement = Ok(());
 
     while !rl.window_should_close() {
         // NOTE: Quitting the application via Escape is handled by raylib itself, no need for a keybinding for now
-        match key_bindings.get_action(&mut rl) {
-            Some(Action::PlaceToken(x, y)) => last_placement = game.place(x, y),
-            Some(Action::ResetBoard) => {
+        match key_bindings.get_action(rl) {
+            Some(GameAction::PlaceToken(x, y)) => last_placement = game.place(x, y),
+            Some(GameAction::ResetBoard) => {
                 game = GameState::default();
                 last_placement = Ok(());
             }
+            Some(GameAction::CloseBoard) => return Screen::Menu,
             None => {}
         }
 
@@ -31,12 +113,14 @@ fn main() {
             draw_side_panel(&mut d, &game, last_placement, &key_bindings);
         });
     }
+    Screen::Quit
 }
 
 // UI Actions
-enum Action {
+enum GameAction {
     PlaceToken(usize, usize),
     ResetBoard,
+    CloseBoard,
 }
 
 struct KeyBinding {
@@ -45,6 +129,9 @@ struct KeyBinding {
 
     reset_key: KeyboardKey,
     reset_name: String,
+
+    close_key: KeyboardKey,
+    close_name: String,
 }
 
 impl KeyBinding {
@@ -73,8 +160,14 @@ impl KeyBinding {
         KeyBinding {
             positions,
             labels: fixed_labels,
+
             reset_key: KeyboardKey::KEY_R,
             reset_name: rl.get_key_name(KeyboardKey::KEY_R).unwrap_or("?".into()),
+
+            close_key: KeyboardKey::KEY_ESCAPE,
+            close_name: rl
+                .get_key_name(KeyboardKey::KEY_ESCAPE)
+                .unwrap_or("Esc".into()),
         }
     }
 
@@ -101,13 +194,15 @@ impl KeyBinding {
         }
     }
 
-    fn get_action(&self, rl: &mut RaylibHandle) -> Option<Action> {
+    fn get_action(&self, rl: &mut RaylibHandle) -> Option<GameAction> {
         if rl.is_key_pressed(self.reset_key) {
-            Some(Action::ResetBoard)
+            Some(GameAction::ResetBoard)
+        } else if rl.is_key_pressed(self.close_key) {
+            return Some(GameAction::CloseBoard);
         } else if let Some(key) = rl.get_key_pressed() {
             let pos = self.key_to_position(key);
             if let Some(p) = pos {
-                Some(Action::PlaceToken(p.0, p.1))
+                Some(GameAction::PlaceToken(p.0, p.1))
             } else {
                 None
             }
@@ -192,7 +287,7 @@ fn draw_side_panel(
     draw_key_box(
         d,
         Rectangle::new(x as f32, y as f32, 30.0, 30.0),
-        "Esc".into(),
+        key_bindings.close_name.to_uppercase(),
         10,
         KEY_COLOR,
     );
