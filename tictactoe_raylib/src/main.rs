@@ -14,7 +14,7 @@ fn main() {
     let mut last_placement = Ok(());
 
     while !rl.window_should_close() {
-        if rl.is_key_pressed(KeyboardKey::KEY_R) && rl.is_key_pressed_repeat(KeyboardKey::KEY_LEFT_SHIFT) {
+        if rl.is_key_pressed(KeyboardKey::KEY_R) {
             game = GameState::default();
             last_placement = Ok(())
         } else if let Some(key) = rl.get_key_pressed() {
