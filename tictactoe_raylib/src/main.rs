@@ -1,4 +1,4 @@
-use raylib::{ffi::{CSSPalette, RaylibPalette}, prelude::*};
+use raylib::prelude::*;
 
 use tictactoe_ratatui::tictactoe::{Cell, GameState, Outcome, PlaceError, Player, WinCombination};
 
@@ -16,14 +16,12 @@ fn main() {
     while !rl.window_should_close() {
         // NOTE: Quitting the application via Escape is handled by raylib itself, no need for a keybinding for now
         match key_bindings.get_action(&mut rl) {
-            Some(Action::PlaceToken(x, y)) => {
-                last_placement = game.place(x, y)
-            },
+            Some(Action::PlaceToken(x, y)) => last_placement = game.place(x, y),
             Some(Action::ResetBoard) => {
                 game = GameState::default();
                 last_placement = Ok(());
-            },
-            None => {},
+            }
+            None => {}
         }
 
         // Render
@@ -38,7 +36,7 @@ fn main() {
 // UI Actions
 enum Action {
     PlaceToken(usize, usize),
-    ResetBoard
+    ResetBoard,
 }
 
 struct KeyBinding {
@@ -203,11 +201,12 @@ fn draw_side_panel(
 
 fn draw_game_board(d: &mut RaylibDrawHandle, game: &GameState, key_bindings: &KeyBinding) {
     // Check if the game is over and copy the win combination
-    let win_combination: Option<WinCombination> = if let Some(Outcome::PlayerWins(_, combination)) = game.outcome {
-        Some(combination)
-    } else {
-        None
-    };
+    let win_combination: Option<WinCombination> =
+        if let Some(Outcome::PlayerWins(_, combination)) = game.outcome {
+            Some(combination)
+        } else {
+            None
+        };
 
     const MARGIN: i32 = 20;
     const SIZE: i32 = 200;
@@ -216,7 +215,9 @@ fn draw_game_board(d: &mut RaylibDrawHandle, game: &GameState, key_bindings: &Ke
     {
         for x in 0..=2 {
             for y in 0..=2 {
-                let color = if let Some(pos) = win_combination && ((x, y) == pos.0 || (x, y) == pos.1 || (x, y) == pos.2) {
+                let color = if let Some(pos) = win_combination
+                    && ((x, y) == pos.0 || (x, y) == pos.1 || (x, y) == pos.2)
+                {
                     Color::SKYBLUE
                 } else if (x + y * 3) % 2 == 0 {
                     BACKGROUND_DARK
