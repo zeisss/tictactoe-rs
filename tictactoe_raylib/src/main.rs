@@ -42,13 +42,16 @@ enum Action {
 }
 
 struct KeyBinding {
-    keys: [KeyboardKey; 9],
+    positions: [KeyboardKey; 9],
     labels: [String; 9],
+
+    reset_key: KeyboardKey,
+    reset_name: String,
 }
 
 impl KeyBinding {
     fn from_raylib_handle(rl: &mut RaylibHandle) -> KeyBinding {
-        let keys: [KeyboardKey; 9] = [
+        let positions: [KeyboardKey; 9] = [
             KeyboardKey::KEY_Q,
             KeyboardKey::KEY_W,
             KeyboardKey::KEY_E,
@@ -62,25 +65,23 @@ impl KeyBinding {
 
         // Lookup the actual text on the phsyical keyboard button
         let mut labels = vec![];
-        for key in keys {
-            if let Some(name) = rl.get_key_name(key) {
-                labels.push(name);
-            } else {
-                labels.push("?".into());
-            }
+        for key in positions {
+            labels.push(rl.get_key_name(key).unwrap_or("?".into()));
         }
 
         let fixed_labels = labels.try_into().unwrap_or_else(|v: Vec<String>| {
             panic!("Expected a Vec of length {} but it was {}", 9, v.len())
         });
         KeyBinding {
-            keys,
+            positions,
             labels: fixed_labels,
+            reset_key: KeyboardKey::KEY_R,
+            reset_name: rl.get_key_name(KeyboardKey::KEY_R).unwrap_or("?".into()),
         }
     }
 
     fn get_name(&self, key: KeyboardKey) -> String {
-        if let Some(pos) = self.keys.iter().position(|k| key == *k) {
+        if let Some(pos) = self.positions.iter().position(|k| key == *k) {
             self.labels[pos].to_uppercase().clone()
         } else {
             "?".into()
@@ -90,11 +91,11 @@ impl KeyBinding {
     fn get_name_for_position(&self, x: usize, y: usize) -> String {
         assert!(x <= 2);
         assert!(y <= 2);
-        return self.get_name(self.keys[x + y * 3]);
+        return self.get_name(self.positions[x + y * 3]);
     }
 
     fn key_to_position(&self, key: KeyboardKey) -> Option<(usize, usize)> {
-        if let Some(pos) = self.keys.iter().position(|k| key == *k) {
+        if let Some(pos) = self.positions.iter().position(|k| key == *k) {
             let r = pos % 3;
             Some((r, (pos - r) / 3))
         } else {
@@ -103,7 +104,7 @@ impl KeyBinding {
     }
 
     fn get_action(&self, rl: &mut RaylibHandle) -> Option<Action> {
-        if rl.is_key_pressed(KeyboardKey::KEY_R) {
+        if rl.is_key_pressed(self.reset_key) {
             Some(Action::ResetBoard)
         } else if let Some(key) = rl.get_key_pressed() {
             let pos = self.key_to_position(key);
@@ -183,7 +184,7 @@ fn draw_side_panel(
     draw_key_box(
         d,
         Rectangle::new(x as f32, y as f32, 30.0, 30.0),
-        key_bindings.get_name(KeyboardKey::KEY_R),
+        key_bindings.reset_name.to_uppercase(),
         10,
         KEY_COLOR,
     );
