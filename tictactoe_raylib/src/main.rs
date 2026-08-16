@@ -7,6 +7,7 @@ fn main() {
         .size(800, 600)
         .title("TicTacToe in Rust + Raylib")
         .build();
+    rl.set_target_fps(30);
 
     let key_bindings = KeyBinding::from_raylib_handle(&mut rl);
     let mut game = GameState::default();
