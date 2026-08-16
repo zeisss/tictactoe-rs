@@ -28,7 +28,7 @@ fn main() {
         rl.draw(&thread, |mut d| {
             d.clear_background(Color::PINK); // pink to check everything is covered
             draw_game_board(&mut d, &game, &key_bindings);
-            draw_side_panel(&mut d, &game, last_placement);
+            draw_side_panel(&mut d, &game, last_placement, &key_bindings);
         });
     }
 }
@@ -71,7 +71,7 @@ impl KeyBinding {
 
     fn get_name(&self, key: KeyboardKey) -> String {
         if let Some(pos) = self.keys.iter().position(|k| key == *k) {
-            self.labels[pos].clone()
+            self.labels[pos].to_uppercase().clone()
         } else {
             "?".into()
         }
@@ -100,6 +100,7 @@ fn player_color(p: Player) -> Color {
     }
 }
 const TEXT_COLOR: Color = Color::BLACK;
+const KEY_COLOR: Color = Color::DARKGRAY;
 const ERROR_COLOR: Color = Color::DARKRED;
 const BACKGROUND_LIGHT: Color = Color::LIGHTGRAY;
 const BACKGROUND_DARK: Color = Color::GRAY;
@@ -110,6 +111,7 @@ fn draw_side_panel(
     d: &mut RaylibDrawHandle,
     game: &GameState,
     last_placement: Result<(), PlaceError>,
+    key_bindings: &KeyBinding,
 ) {
     // Background + Separator Line to board
     d.draw_rectangle(600, 0, 200, 600, BACKGROUND_SIDE);
@@ -142,18 +144,35 @@ fn draw_side_panel(
     }
 
     // Draw footer with keybindings and help text
-    let mut y = 500;
+    let x = 610;
+    let mut y = 470;
     d.draw_text(
         "Press key for field\nto place your token",
-        610,
+        x,
         y,
         16,
         TEXT_COLOR,
     );
-    y += 45;
-    d.draw_text("R: Restart game", 610, y, 20, TEXT_COLOR);
-    y += 25;
-    d.draw_text("Esc: Quit app", 610, y, 20, TEXT_COLOR);
+
+    y = 520;
+    draw_key_box(
+        d,
+        Rectangle::new(x as f32, y as f32, 30.0, 30.0),
+        key_bindings.get_name(KeyboardKey::KEY_R),
+        10,
+        KEY_COLOR,
+    );
+    d.draw_text("Restart game", x + 40, y + 5, 20, TEXT_COLOR);
+
+    y = 560;
+    draw_key_box(
+        d,
+        Rectangle::new(x as f32, y as f32, 30.0, 30.0),
+        "Esc".into(),
+        10,
+        KEY_COLOR,
+    );
+    d.draw_text("Quit app", x + 40, y + 5, 20, TEXT_COLOR);
 }
 
 fn draw_game_board(d: &mut RaylibDrawHandle, game: &GameState, key_bindings: &KeyBinding) {
@@ -191,12 +210,17 @@ fn draw_game_board(d: &mut RaylibDrawHandle, game: &GameState, key_bindings: &Ke
 
             match cell {
                 Cell::Empty => {
-                    d.draw_text(
-                        &key_bindings.get_name_for_position(x, y),
-                        x as i32 * SIZE + 100,
-                        y as i32 * SIZE + 100,
-                        20,
-                        Color::BLACK,
+                    draw_key_box(
+                        d,
+                        Rectangle::new(
+                            (x as i32 * SIZE + 100 - 30) as f32,
+                            (y as i32 * SIZE + 100 - 30) as f32,
+                            60.0,
+                            60.0,
+                        ),
+                        key_bindings.get_name_for_position(x, y),
+                        30,
+                        KEY_COLOR,
                     );
                 }
                 Cell::PlayerOccupied(Player::Cross) => {
@@ -226,4 +250,21 @@ fn draw_game_board(d: &mut RaylibDrawHandle, game: &GameState, key_bindings: &Ke
             };
         }
     }
+}
+
+fn draw_key_box(
+    d: &mut RaylibDrawHandle,
+    r: Rectangle,
+    text: String,
+    font_size: i32,
+    color: Color,
+) {
+    d.draw_rectangle_lines_ex(r, 2.0, color);
+    d.draw_text(
+        &text,
+        r.x as i32 + font_size / 2,
+        r.y as i32 + font_size / 2,
+        font_size,
+        color,
+    );
 }
