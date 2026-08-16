@@ -9,7 +9,6 @@ fn main() {
         .build();
 
     let key_bindings = KeyBinding::from_raylib_handle(&mut rl);
-
     let mut game = GameState::default();
     let mut last_placement = Ok(());
 
@@ -51,6 +50,8 @@ impl KeyBinding {
             KeyboardKey::KEY_X,
             KeyboardKey::KEY_C,
         ];
+
+        // Lookup the actual text on the phsyical keyboard button
         let mut labels = vec![];
         for key in keys {
             if let Some(name) = rl.get_key_name(key) {
