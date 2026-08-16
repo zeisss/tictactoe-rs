@@ -56,11 +56,14 @@ impl App {
                 self.canvas.set_draw_color(BLACK);
                 // Draw the cell:
                 // Either the cross/naught or the keyboard shortcut to place the next token
-                let middle = (x as f32 * CELL_SIZE as f32 + 100.0, y as f32 * CELL_SIZE as f32 + 100.0);
+                let middle = (
+                    x as f32 * CELL_SIZE as f32 + 100.0,
+                    y as f32 * CELL_SIZE as f32 + 100.0,
+                );
 
                 match self.board.get_cell((x as usize, y as usize)) {
                     Cell::PlayerOccupied(Player::Cross) => self.draw_cross_cell(x, y),
-                    Cell::PlayerOccupied(Player::Naught) => self.draw_naught_cell(x, y),
+                    Cell::PlayerOccupied(Player::Nought) => self.draw_naught_cell(x, y),
 
                     Cell::Empty => {
                         let label: &String = match (x, y) {
@@ -88,7 +91,7 @@ impl App {
         match self.board.outcome {
             Some(outcome) => {
                 let message = match outcome {
-                    Outcome::PlayerWins(Player::Naught, _) => "Naught wins!",
+                    Outcome::PlayerWins(Player::Nought, _) => "Naught wins!",
                     Outcome::PlayerWins(Player::Cross, _) => "Cross wins!",
                     Outcome::Draw => "Draw - no winner!",
                 };
@@ -111,8 +114,10 @@ impl App {
                 };
 
                 self.canvas.set_draw_color(BLACK);
-                self.canvas.draw_debug_text("Press one of the", (AREA_X, action_helper))?;
-                self.canvas.draw_debug_text("indicated keys", (AREA_X, action_helper + 10.0))?;
+                self.canvas
+                    .draw_debug_text("Press one of the", (AREA_X, action_helper))?;
+                self.canvas
+                    .draw_debug_text("indicated keys", (AREA_X, action_helper + 10.0))?;
             }
         };
 
@@ -234,15 +239,60 @@ use sdl3_sys;
 fn key_map_table() -> HashMap<Scancode, String> {
     let mut key_map = HashMap::new();
 
-    key_map.insert(Scancode::Q, Keycode::from_scancode(Scancode::Q, sdl3_sys::keycode::SDL_Keymod::NONE, true).unwrap().name());
-    key_map.insert(Scancode::W, Keycode::from_scancode(Scancode::W, sdl3_sys::keycode::SDL_Keymod::NONE, true).unwrap().name());
-    key_map.insert(Scancode::E, Keycode::from_scancode(Scancode::E, sdl3_sys::keycode::SDL_Keymod::NONE, true).unwrap().name());
-    key_map.insert(Scancode::A, Keycode::from_scancode(Scancode::A, sdl3_sys::keycode::SDL_Keymod::NONE, true).unwrap().name());
-    key_map.insert(Scancode::S, Keycode::from_scancode(Scancode::S, sdl3_sys::keycode::SDL_Keymod::NONE, true).unwrap().name());
-    key_map.insert(Scancode::D, Keycode::from_scancode(Scancode::D, sdl3_sys::keycode::SDL_Keymod::NONE, true).unwrap().name());
-    key_map.insert(Scancode::Z, Keycode::from_scancode(Scancode::Z, sdl3_sys::keycode::SDL_Keymod::NONE, true).unwrap().name());
-    key_map.insert(Scancode::X, Keycode::from_scancode(Scancode::X, sdl3_sys::keycode::SDL_Keymod::NONE, true).unwrap().name());
-    key_map.insert(Scancode::C, Keycode::from_scancode(Scancode::C, sdl3_sys::keycode::SDL_Keymod::NONE, true).unwrap().name());
+    key_map.insert(
+        Scancode::Q,
+        Keycode::from_scancode(Scancode::Q, sdl3_sys::keycode::SDL_Keymod::NONE, true)
+            .unwrap()
+            .name(),
+    );
+    key_map.insert(
+        Scancode::W,
+        Keycode::from_scancode(Scancode::W, sdl3_sys::keycode::SDL_Keymod::NONE, true)
+            .unwrap()
+            .name(),
+    );
+    key_map.insert(
+        Scancode::E,
+        Keycode::from_scancode(Scancode::E, sdl3_sys::keycode::SDL_Keymod::NONE, true)
+            .unwrap()
+            .name(),
+    );
+    key_map.insert(
+        Scancode::A,
+        Keycode::from_scancode(Scancode::A, sdl3_sys::keycode::SDL_Keymod::NONE, true)
+            .unwrap()
+            .name(),
+    );
+    key_map.insert(
+        Scancode::S,
+        Keycode::from_scancode(Scancode::S, sdl3_sys::keycode::SDL_Keymod::NONE, true)
+            .unwrap()
+            .name(),
+    );
+    key_map.insert(
+        Scancode::D,
+        Keycode::from_scancode(Scancode::D, sdl3_sys::keycode::SDL_Keymod::NONE, true)
+            .unwrap()
+            .name(),
+    );
+    key_map.insert(
+        Scancode::Z,
+        Keycode::from_scancode(Scancode::Z, sdl3_sys::keycode::SDL_Keymod::NONE, true)
+            .unwrap()
+            .name(),
+    );
+    key_map.insert(
+        Scancode::X,
+        Keycode::from_scancode(Scancode::X, sdl3_sys::keycode::SDL_Keymod::NONE, true)
+            .unwrap()
+            .name(),
+    );
+    key_map.insert(
+        Scancode::C,
+        Keycode::from_scancode(Scancode::C, sdl3_sys::keycode::SDL_Keymod::NONE, true)
+            .unwrap()
+            .name(),
+    );
 
     key_map
 }
@@ -266,7 +316,6 @@ pub fn main() {
     };
 
     println!("Scancode / Keymapping {:?}", app.key_map);
-
 
     let mut event_pump = sdl_context.event_pump().unwrap();
     while !app.quit {

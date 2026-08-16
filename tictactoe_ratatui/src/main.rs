@@ -141,9 +141,9 @@ fn render_sidebar(frame: &mut Frame, area: Rect, app: &App) {
     // let text = "Centered text\nwith multiple lines.\nCheck out the recipe!";
     let text: Span = {
         match app.state.outcome {
-        Some(Outcome::PlayerWins(player, _)) => format!("Game over: {:?} won!", player).into(),
-        Some(Outcome::Draw) => "Game Over: Draw!".into(),
-        None => format!("Current player: {:?}", app.state.active_player).into()
+            Some(Outcome::PlayerWins(player, _)) => format!("Game over: {:?} won!", player).into(),
+            Some(Outcome::Draw) => "Game Over: Draw!".into(),
+            None => format!("Current player: {:?}", app.state.active_player).into(),
         }
     };
     let error_hint = {
@@ -258,7 +258,7 @@ pub fn render_game_board(frame: &mut Frame, area: Rect, state: &GameState) {
                             ctx.print((x * 6 + 3) as f64, (y * 6 + 3) as f64, label);
                         }
                         tictactoe::Cell::PlayerOccupied(player) => match player {
-                            tictactoe::Player::Naught => render_circle(ctx, x as i8, y as i8),
+                            tictactoe::Player::Nought => render_circle(ctx, x as i8, y as i8),
                             tictactoe::Player::Cross => render_cross(ctx, x as i8, y as i8),
                         },
                     }

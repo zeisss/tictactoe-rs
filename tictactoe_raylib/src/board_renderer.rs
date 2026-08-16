@@ -6,7 +6,7 @@ use crate::key_bindings::*;
 pub fn player_color(p: Player) -> Color {
     match p {
         Player::Cross => Color::RED,
-        Player::Naught => Color::GREEN,
+        Player::Nought => Color::GREEN,
     }
 }
 
@@ -31,7 +31,7 @@ pub struct Renderer<'a, 'b> {
     pub draw: &'a mut RaylibDrawHandle<'b>,
 }
 
-impl <'a, 'b> Renderer<'a, 'b> {
+impl<'a, 'b> Renderer<'a, 'b> {
     pub fn render(&mut self) {
         self.draw.clear_background(Color::PINK); // pink to check everything is covered
         draw_game_board(&mut self.draw, &self.game, &self.key_bindings);
@@ -64,7 +64,7 @@ pub fn draw_side_panel(
         let message = match outcome {
             Outcome::Draw => "Draw - no winner",
             Outcome::PlayerWins(Player::Cross, _) => "Cross won!",
-            Outcome::PlayerWins(Player::Naught, _) => "Naught won!",
+            Outcome::PlayerWins(Player::Nought, _) => "Naught won!",
         };
 
         d.draw_text(message, 610, y, 20, TEXT_COLOR);
@@ -182,12 +182,12 @@ pub fn draw_game_board(d: &mut RaylibDrawHandle, game: &GameState, key_bindings:
                         player_color(Player::Cross),
                     );
                 }
-                Cell::PlayerOccupied(Player::Naught) => {
+                Cell::PlayerOccupied(Player::Nought) => {
                     d.draw_circle_lines(
                         x as i32 * SIZE + SIZE / 2,
                         y as i32 * SIZE + SIZE / 2,
                         (SIZE as f32) / 2.0 - MARGIN as f32,
-                        player_color(Player::Naught),
+                        player_color(Player::Nought),
                     );
                 }
             };

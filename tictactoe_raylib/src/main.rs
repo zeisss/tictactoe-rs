@@ -111,7 +111,7 @@ fn run_local_play_screen(
 
         // Render
         rl.draw(&thread, |mut d| {
-            let mut renderer = Renderer{
+            let mut renderer = Renderer {
                 game: &game,
                 key_bindings: &key_bindings,
                 error: last_placement.err().map(|err| Error::LocalError(err)),
