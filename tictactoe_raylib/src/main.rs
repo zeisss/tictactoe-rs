@@ -23,6 +23,18 @@ fn main() {
             }
         }
 
+        if let Some(action) = key_bindings.get_action(&mut rl) {
+            match action {
+                Action::PlaceToken(x, y) => {
+                    last_placement = game.place(x, y)
+                },
+                Action::ResetBoard => {
+                    game = GameState::default();
+                    last_placement = Ok(());
+                }
+            }
+        }
+
         // Render
         rl.draw(&thread, |mut d| {
             d.clear_background(Color::PINK); // pink to check everything is covered
@@ -30,6 +42,11 @@ fn main() {
             draw_side_panel(&mut d, &game, last_placement, &key_bindings);
         });
     }
+}
+
+enum Action {
+    PlaceToken(usize, usize),
+    ResetBoard
 }
 
 struct KeyBinding {
@@ -88,6 +105,21 @@ impl KeyBinding {
         if let Some(pos) = self.keys.iter().position(|k| key == *k) {
             let r = pos % 3;
             Some((r, (pos - r) / 3))
+        } else {
+            None
+        }
+    }
+
+    fn get_action(&self, rl: &mut RaylibHandle) -> Option<Action> {
+        if rl.is_key_pressed(KeyboardKey::KEY_R) {
+            Some(Action::ResetBoard)
+        } else if let Some(key) = rl.get_key_pressed() {
+            let pos = self.key_to_position(key);
+            if let Some(p) = pos {
+                Some(Action::PlaceToken(p.0, p.1))
+            } else {
+                None
+            }
         } else {
             None
         }
