@@ -1,0 +1,8 @@
+[package]
+name = "tictactoe_raylib"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+raylib = "6.0.0"
+tictactoe_ratatui = { version = "0.1.0", path = "../tictactoe_ratatui" }
