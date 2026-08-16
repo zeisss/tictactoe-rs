@@ -13,16 +13,6 @@ fn main() {
     let mut last_placement = Ok(());
 
     while !rl.window_should_close() {
-        if rl.is_key_pressed(KeyboardKey::KEY_R) {
-            game = GameState::default();
-            last_placement = Ok(())
-        } else if let Some(key) = rl.get_key_pressed() {
-            let pos = key_bindings.key_to_position(key);
-            if let Some(p) = pos {
-                last_placement = game.place(p.0, p.1);
-            }
-        }
-
         if let Some(action) = key_bindings.get_action(&mut rl) {
             match action {
                 Action::PlaceToken(x, y) => {
