@@ -46,19 +46,19 @@ fn main() {
 
 fn position_to_key(x: usize, y: usize) -> &'static str {
     match (x, y) {
-    (0, 0) => "Q",
-    (1, 0) => "W",
-    (2, 0) => "E",
+        (0, 0) => "Q",
+        (1, 0) => "W",
+        (2, 0) => "E",
 
-    (0, 1) => "A",
-    (1, 1) => "S",
-    (2, 1) => "D",
+        (0, 1) => "A",
+        (1, 1) => "S",
+        (2, 1) => "D",
 
-    (0, 2) => "Z",
-    (1, 2) => "X",
-    (2, 2) => "C",
+        (0, 2) => "Z",
+        (1, 2) => "X",
+        (2, 2) => "C",
 
-    _ => "_",
+        _ => "_",
     }
 }
 
@@ -124,24 +124,24 @@ fn draw_game_board(d: &mut RaylibDrawHandle, game: &GameState) {
     const SIZE: i32 = 200;
 
     // Draw checker board
-    d.draw_rectangle(0,0, SIZE, SIZE, BACKGROUND_LIGHT);
-    d.draw_rectangle(SIZE,0, SIZE, SIZE, BACKGROUND_DARK);
-    d.draw_rectangle(SIZE * 2,0, SIZE, SIZE, BACKGROUND_LIGHT);
+    d.draw_rectangle(0, 0, SIZE, SIZE, BACKGROUND_LIGHT);
+    d.draw_rectangle(SIZE, 0, SIZE, SIZE, BACKGROUND_DARK);
+    d.draw_rectangle(SIZE * 2, 0, SIZE, SIZE, BACKGROUND_LIGHT);
 
-    d.draw_rectangle(0,SIZE, SIZE, SIZE, BACKGROUND_DARK);
-    d.draw_rectangle(SIZE,SIZE, SIZE, SIZE, BACKGROUND_LIGHT);
-    d.draw_rectangle(SIZE*2,SIZE, SIZE, SIZE, BACKGROUND_DARK);
+    d.draw_rectangle(0, SIZE, SIZE, SIZE, BACKGROUND_DARK);
+    d.draw_rectangle(SIZE, SIZE, SIZE, SIZE, BACKGROUND_LIGHT);
+    d.draw_rectangle(SIZE * 2, SIZE, SIZE, SIZE, BACKGROUND_DARK);
 
-    d.draw_rectangle(0,SIZE*2, SIZE, SIZE, BACKGROUND_LIGHT);
-    d.draw_rectangle(SIZE,SIZE*2, SIZE, SIZE, BACKGROUND_DARK);
-    d.draw_rectangle(SIZE*2,SIZE*2, SIZE, SIZE, BACKGROUND_LIGHT);
+    d.draw_rectangle(0, SIZE * 2, SIZE, SIZE, BACKGROUND_LIGHT);
+    d.draw_rectangle(SIZE, SIZE * 2, SIZE, SIZE, BACKGROUND_DARK);
+    d.draw_rectangle(SIZE * 2, SIZE * 2, SIZE, SIZE, BACKGROUND_LIGHT);
 
     // Draw lines to separate tiles / cells
     d.draw_line(0, SIZE, SIZE * 3, SIZE, LINE_COLOR);
-    d.draw_line(0, SIZE*2, SIZE * 3, SIZE*2, LINE_COLOR);
+    d.draw_line(0, SIZE * 2, SIZE * 3, SIZE * 2, LINE_COLOR);
 
-    d.draw_line(SIZE, 0, SIZE, SIZE*3, LINE_COLOR);
-    d.draw_line(SIZE*2, 0, SIZE*2, SIZE*3, LINE_COLOR);
+    d.draw_line(SIZE, 0, SIZE, SIZE * 3, LINE_COLOR);
+    d.draw_line(SIZE * 2, 0, SIZE * 2, SIZE * 3, LINE_COLOR);
 
     // Draw a 3x3 grid where each cell is 200x200 (Matching the window height of 600)
     for x in 0..=2 {
@@ -157,7 +157,7 @@ fn draw_game_board(d: &mut RaylibDrawHandle, game: &GameState) {
                         20,
                         Color::BLACK,
                     );
-                },
+                }
                 Cell::PlayerOccupied(Player::Cross) => {
                     d.draw_line(
                         x as i32 * SIZE + MARGIN,
@@ -173,19 +173,17 @@ fn draw_game_board(d: &mut RaylibDrawHandle, game: &GameState) {
                         y as i32 * SIZE + SIZE - MARGIN,
                         player_color(Player::Cross),
                     );
-                },
+                }
                 Cell::PlayerOccupied(Player::Naught) => {
                     d.draw_circle_lines(
                         x as i32 * SIZE + SIZE / 2,
                         y as i32 * SIZE + SIZE / 2,
-                        (SIZE as f32) / 2.0  - MARGIN as f32,
+                        (SIZE as f32) / 2.0 - MARGIN as f32,
                         player_color(Player::Naught),
                     );
                 }
                 _ => {}
             };
-
-            
         }
     }
 }
