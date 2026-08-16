@@ -8,57 +8,88 @@ fn main() {
         .title("TicTacToe in Rust + Raylib")
         .build();
 
+    let key_bindings = KeyBinding::from_raylib_handle(&mut rl);
+
     let mut game = GameState::default();
     let mut last_placement = Ok(());
 
     while !rl.window_should_close() {
-        // Event Handling
-        if rl.is_key_pressed(KeyboardKey::KEY_Q) {
-            last_placement = game.place(0, 0)
-        } else if rl.is_key_pressed(KeyboardKey::KEY_W) {
-            last_placement = game.place(1, 0)
-        } else if rl.is_key_pressed(KeyboardKey::KEY_E) {
-            last_placement = game.place(2, 0)
-        } else if rl.is_key_pressed(KeyboardKey::KEY_A) {
-            last_placement = game.place(0, 1)
-        } else if rl.is_key_pressed(KeyboardKey::KEY_S) {
-            last_placement = game.place(1, 1)
-        } else if rl.is_key_pressed(KeyboardKey::KEY_D) {
-            last_placement = game.place(2, 1)
-        } else if rl.is_key_pressed(KeyboardKey::KEY_Z) {
-            last_placement = game.place(0, 2)
-        } else if rl.is_key_pressed(KeyboardKey::KEY_X) {
-            last_placement = game.place(1, 2)
-        } else if rl.is_key_pressed(KeyboardKey::KEY_C) {
-            last_placement = game.place(2, 2)
-        } else if rl.is_key_pressed(KeyboardKey::KEY_R) {
+        if rl.is_key_pressed(KeyboardKey::KEY_R) && rl.is_key_pressed_repeat(KeyboardKey::KEY_LEFT_SHIFT) {
             game = GameState::default();
             last_placement = Ok(())
+        } else if let Some(key) = rl.get_key_pressed() {
+            let pos = key_bindings.key_to_position(key);
+            if let Some(p) = pos {
+                last_placement = game.place(p.0, p.1);
+            }
         }
 
         // Render
-        let mut d = rl.begin_drawing(&thread);
-        d.clear_background(Color::PINK); // pink to check everything is covered
-        draw_game_board(&mut d, &game);
-        draw_side_panel(&mut d, &game, last_placement);
+        rl.draw(&thread, |mut d| {
+            d.clear_background(Color::PINK); // pink to check everything is covered
+            draw_game_board(&mut d, &game, &key_bindings);
+            draw_side_panel(&mut d, &game, last_placement);
+        });
     }
 }
 
-fn position_to_key(x: usize, y: usize) -> &'static str {
-    match (x, y) {
-        (0, 0) => "Q",
-        (1, 0) => "W",
-        (2, 0) => "E",
+struct KeyBinding {
+    keys: [KeyboardKey; 9],
+    labels: [String; 9],
+}
 
-        (0, 1) => "A",
-        (1, 1) => "S",
-        (2, 1) => "D",
+impl KeyBinding {
+    fn from_raylib_handle(rl: &mut RaylibHandle) -> KeyBinding {
+        let keys: [KeyboardKey; 9] = [
+            KeyboardKey::KEY_Q,
+            KeyboardKey::KEY_W,
+            KeyboardKey::KEY_E,
+            KeyboardKey::KEY_A,
+            KeyboardKey::KEY_S,
+            KeyboardKey::KEY_D,
+            KeyboardKey::KEY_Z, // american keyboard layout, we map this for DE layouts
+            KeyboardKey::KEY_X,
+            KeyboardKey::KEY_C,
+        ];
+        let mut labels = vec![];
+        for key in keys {
+            if let Some(name) = rl.get_key_name(key) {
+                labels.push(name);
+            } else {
+                labels.push("?".into());
+            }
+        }
 
-        (0, 2) => "Z",
-        (1, 2) => "X",
-        (2, 2) => "C",
+        let fixed_labels = labels.try_into().unwrap_or_else(|v: Vec<String>| {
+            panic!("Expected a Vec of length {} but it was {}", 9, v.len())
+        });
+        KeyBinding {
+            keys,
+            labels: fixed_labels,
+        }
+    }
 
-        _ => "_",
+    fn get_name(&self, key: KeyboardKey) -> String {
+        if let Some(pos) = self.keys.iter().position(|k| key == *k) {
+            self.labels[pos].clone()
+        } else {
+            "?".into()
+        }
+    }
+
+    fn get_name_for_position(&self, x: usize, y: usize) -> String {
+        assert!(x <= 2);
+        assert!(y <= 2);
+        return self.get_name(self.keys[x + y * 3]);
+    }
+
+    fn key_to_position(&self, key: KeyboardKey) -> Option<(usize, usize)> {
+        if let Some(pos) = self.keys.iter().position(|k| key == *k) {
+            let r = pos % 3;
+            Some((r, (pos - r) / 3))
+        } else {
+            None
+        }
     }
 }
 
@@ -125,29 +156,33 @@ fn draw_side_panel(
     d.draw_text("Esc: Quit app", 610, y, 20, TEXT_COLOR);
 }
 
-fn draw_game_board(d: &mut RaylibDrawHandle, game: &GameState) {
+fn draw_game_board(d: &mut RaylibDrawHandle, game: &GameState, key_bindings: &KeyBinding) {
     const MARGIN: i32 = 20;
     const SIZE: i32 = 200;
 
     // Draw checker board
-    d.draw_rectangle(0, 0, SIZE, SIZE, BACKGROUND_LIGHT);
-    d.draw_rectangle(SIZE, 0, SIZE, SIZE, BACKGROUND_DARK);
-    d.draw_rectangle(SIZE * 2, 0, SIZE, SIZE, BACKGROUND_LIGHT);
+    {
+        d.draw_rectangle(0, 0, SIZE, SIZE, BACKGROUND_LIGHT);
+        d.draw_rectangle(SIZE, 0, SIZE, SIZE, BACKGROUND_DARK);
+        d.draw_rectangle(SIZE * 2, 0, SIZE, SIZE, BACKGROUND_LIGHT);
 
-    d.draw_rectangle(0, SIZE, SIZE, SIZE, BACKGROUND_DARK);
-    d.draw_rectangle(SIZE, SIZE, SIZE, SIZE, BACKGROUND_LIGHT);
-    d.draw_rectangle(SIZE * 2, SIZE, SIZE, SIZE, BACKGROUND_DARK);
+        d.draw_rectangle(0, SIZE, SIZE, SIZE, BACKGROUND_DARK);
+        d.draw_rectangle(SIZE, SIZE, SIZE, SIZE, BACKGROUND_LIGHT);
+        d.draw_rectangle(SIZE * 2, SIZE, SIZE, SIZE, BACKGROUND_DARK);
 
-    d.draw_rectangle(0, SIZE * 2, SIZE, SIZE, BACKGROUND_LIGHT);
-    d.draw_rectangle(SIZE, SIZE * 2, SIZE, SIZE, BACKGROUND_DARK);
-    d.draw_rectangle(SIZE * 2, SIZE * 2, SIZE, SIZE, BACKGROUND_LIGHT);
+        d.draw_rectangle(0, SIZE * 2, SIZE, SIZE, BACKGROUND_LIGHT);
+        d.draw_rectangle(SIZE, SIZE * 2, SIZE, SIZE, BACKGROUND_DARK);
+        d.draw_rectangle(SIZE * 2, SIZE * 2, SIZE, SIZE, BACKGROUND_LIGHT);
+    }
 
     // Draw lines to separate tiles / cells
-    d.draw_line(0, SIZE, SIZE * 3, SIZE, LINE_COLOR);
-    d.draw_line(0, SIZE * 2, SIZE * 3, SIZE * 2, LINE_COLOR);
+    {
+        d.draw_line(0, SIZE, SIZE * 3, SIZE, LINE_COLOR);
+        d.draw_line(0, SIZE * 2, SIZE * 3, SIZE * 2, LINE_COLOR);
 
-    d.draw_line(SIZE, 0, SIZE, SIZE * 3, LINE_COLOR);
-    d.draw_line(SIZE * 2, 0, SIZE * 2, SIZE * 3, LINE_COLOR);
+        d.draw_line(SIZE, 0, SIZE, SIZE * 3, LINE_COLOR);
+        d.draw_line(SIZE * 2, 0, SIZE * 2, SIZE * 3, LINE_COLOR);
+    }
 
     // Draw a 3x3 grid where each cell is 200x200 (Matching the window height of 600)
     for x in 0..=2 {
@@ -157,7 +192,7 @@ fn draw_game_board(d: &mut RaylibDrawHandle, game: &GameState) {
             match cell {
                 Cell::Empty => {
                     d.draw_text(
-                        position_to_key(x, y),
+                        &key_bindings.get_name_for_position(x, y),
                         x as i32 * SIZE + 100,
                         y as i32 * SIZE + 100,
                         20,
@@ -188,7 +223,6 @@ fn draw_game_board(d: &mut RaylibDrawHandle, game: &GameState) {
                         player_color(Player::Naught),
                     );
                 }
-                _ => {}
             };
         }
     }
