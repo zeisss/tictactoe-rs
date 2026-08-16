@@ -18,10 +18,31 @@ pub const BACKGROUND_DARK: Color = Color::GRAY;
 pub const BACKGROUND_SIDE: Color = Color::WHITESMOKE;
 pub const LINE_COLOR: Color = Color::BLACK;
 
+#[derive(Debug, Copy, Clone)]
+pub enum Error {
+    LocalError(PlaceError),
+    RemoteError,
+}
+
+pub struct Renderer<'a, 'b> {
+    pub game: &'a GameState,
+    pub key_bindings: &'a KeyBinding,
+    pub error: Option<Error>,
+    pub draw: &'a mut RaylibDrawHandle<'b>,
+}
+
+impl <'a, 'b> Renderer<'a, 'b> {
+    pub fn render(&mut self) {
+        self.draw.clear_background(Color::PINK); // pink to check everything is covered
+        draw_game_board(&mut self.draw, &self.game, &self.key_bindings);
+        draw_side_panel(&mut self.draw, &self.game, self.error, &self.key_bindings);
+    }
+}
+
 pub fn draw_side_panel(
     d: &mut RaylibDrawHandle,
     game: &GameState,
-    last_placement: Result<(), PlaceError>,
+    error: Option<Error>,
     key_bindings: &KeyBinding,
 ) {
     // Background + Separator Line to board
@@ -30,8 +51,8 @@ pub fn draw_side_panel(
     d.draw_line(601, 0, 601, 600, LINE_COLOR);
 
     let mut y = 10;
-    // IF last_placement has an error, we need to show it
-    if let Err(err) = last_placement {
+    // If there is an error, show it at the top
+    if let Some(err) = error {
         let message = format!("ERROR:\n{:?}", err);
         d.draw_text(&message, 610, y, 20, ERROR_COLOR);
 

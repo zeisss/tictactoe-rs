@@ -1,6 +1,6 @@
 use raylib::{ffi::Rectangle, prelude::*};
 
-use tictactoe_ratatui::tictactoe::{Cell, GameState, Outcome, PlaceError, Player, WinCombination};
+use tictactoe_ratatui::tictactoe::GameState;
 
 mod board_renderer;
 mod key_bindings;
@@ -111,9 +111,13 @@ fn run_local_play_screen(
 
         // Render
         rl.draw(&thread, |mut d| {
-            d.clear_background(Color::PINK); // pink to check everything is covered
-            draw_game_board(&mut d, &game, &key_bindings);
-            draw_side_panel(&mut d, &game, last_placement, &key_bindings);
+            let mut renderer = Renderer{
+                game: &game,
+                key_bindings: &key_bindings,
+                error: last_placement.err().map(|err| Error::LocalError(err)),
+                draw: &mut d,
+            };
+            renderer.render();
         });
     }
     Screen::Quit
