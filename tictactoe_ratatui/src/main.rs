@@ -15,6 +15,8 @@ use ratatui::widgets::canvas::{Canvas, Circle, Context, Line};
 mod tictactoe;
 use tictactoe::{GameState, PlaceError};
 
+use crate::tictactoe::Outcome;
+
 const QUIT_KEY: KeyEvent = KeyEvent::new(KeyCode::Char('q'), KeyModifiers::SHIFT);
 
 #[derive(Debug)]
@@ -138,10 +140,10 @@ fn render_title(frame: &mut Frame, area: Rect) {
 fn render_sidebar(frame: &mut Frame, area: Rect, app: &App) {
     // let text = "Centered text\nwith multiple lines.\nCheck out the recipe!";
     let text: Span = {
-        if let Some(outcome) = app.state.outcome {
-            format!("Game over! Outcome: {:?}", outcome).into()
-        } else {
-            format!("Current player: {:?}", app.state.active_player).into()
+        match app.state.outcome {
+        Some(Outcome::PlayerWins(player, _)) => format!("Game over: {:?} won!", player).into(),
+        Some(Outcome::Draw) => "Game Over: Draw!".into(),
+        None => format!("Current player: {:?}", app.state.active_player).into()
         }
     };
     let error_hint = {

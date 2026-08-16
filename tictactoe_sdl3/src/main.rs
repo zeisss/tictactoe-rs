@@ -88,8 +88,8 @@ impl App {
         match self.board.outcome {
             Some(outcome) => {
                 let message = match outcome {
-                    Outcome::NaughtWins => "Naught wins!",
-                    Outcome::CrossWins => "Cross wins!",
+                    Outcome::PlayerWins(Player::Naught, _) => "Naught wins!",
+                    Outcome::PlayerWins(Player::Cross, _) => "Cross wins!",
                     Outcome::Draw => "Draw - no winner!",
                 };
                 self.canvas.draw_debug_text(message, (AREA_X, 10.0))?;

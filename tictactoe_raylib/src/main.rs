@@ -164,8 +164,8 @@ fn draw_side_panel(
         // Game is over, just render the winner / outcome
         let message = match outcome {
             Outcome::Draw => "Draw - no winner",
-            Outcome::CrossWins => "Cross won!",
-            Outcome::NaughtWins => "Naught won!",
+            Outcome::PlayerWins(Player::Cross, _) => "Cross won!",
+            Outcome::PlayerWins(Player::Naught, _) => "Naught won!",
         };
 
         d.draw_text(message, 610, y, 20, TEXT_COLOR);

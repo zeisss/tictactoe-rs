@@ -19,18 +19,8 @@ impl fmt::Display for Player {
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Outcome {
-    NaughtWins,
-    CrossWins,
+    PlayerWins(Player, WinCombination),
     Draw,
-}
-
-impl From<Player> for Outcome {
-    fn from(value: Player) -> Self {
-        match value {
-            Player::Naught => Outcome::NaughtWins,
-            Player::Cross => Outcome::CrossWins,
-        }
-    }
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -38,6 +28,7 @@ pub enum Cell {
     Empty,
     PlayerOccupied(Player),
 }
+
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum PlaceError {
     InvalidCoordinates,
@@ -132,7 +123,10 @@ impl GameState {
                 let third = self.get_cell(condition.2);
 
                 if first == second && second == third {
-                    return Some(Outcome::from(player));
+                    return Some(Outcome::PlayerWins(
+                        player,
+                        *condition,
+                    ));
                 }
             }
         }
@@ -178,7 +172,10 @@ mod tests {
         game.place(0, 1).unwrap(); // Naught
         game.place(1, 1).unwrap(); // Cross
         game.place(0, 2).unwrap(); // Naught wins
-        assert_eq!(game.outcome, Some(Outcome::NaughtWins));
+        assert_eq!(game.outcome, Some(Outcome::PlayerWins(
+            Player::Naught, 
+            ((0,0), (0, 1), (0, 2)),
+        )));
     }
 
     #[test]
@@ -191,7 +188,10 @@ mod tests {
         game.place(1, 1).unwrap(); // Cross
         game.place(2, 2).unwrap(); // Naught
         game.place(1, 2).unwrap(); // Cross wins
-        assert_eq!(game.outcome, Some(Outcome::CrossWins));
+        assert_eq!(game.outcome, Some(Outcome::PlayerWins(
+            Player::Cross, 
+            ((1, 0), (1, 1), (1, 2)),
+        )));
     }
 
     #[test]
