@@ -1,6 +1,6 @@
-use raylib::prelude::*;
+use raylib::{ffi::{CSSPalette, RaylibPalette}, prelude::*};
 
-use tictactoe_ratatui::tictactoe::{Cell, GameState, Outcome, PlaceError, Player};
+use tictactoe_ratatui::tictactoe::{Cell, GameState, Outcome, PlaceError, Player, WinCombination};
 
 fn main() {
     let (mut rl, thread) = raylib::init()
@@ -201,22 +201,30 @@ fn draw_side_panel(
 }
 
 fn draw_game_board(d: &mut RaylibDrawHandle, game: &GameState, key_bindings: &KeyBinding) {
+    // Check if the game is over and copy the win combination
+    let win_combination: Option<WinCombination> = if let Some(Outcome::PlayerWins(_, combination)) = game.outcome {
+        Some(combination)
+    } else {
+        None
+    };
+
     const MARGIN: i32 = 20;
     const SIZE: i32 = 200;
 
     // Draw checker board
     {
-        d.draw_rectangle(0, 0, SIZE, SIZE, BACKGROUND_LIGHT);
-        d.draw_rectangle(SIZE, 0, SIZE, SIZE, BACKGROUND_DARK);
-        d.draw_rectangle(SIZE * 2, 0, SIZE, SIZE, BACKGROUND_LIGHT);
-
-        d.draw_rectangle(0, SIZE, SIZE, SIZE, BACKGROUND_DARK);
-        d.draw_rectangle(SIZE, SIZE, SIZE, SIZE, BACKGROUND_LIGHT);
-        d.draw_rectangle(SIZE * 2, SIZE, SIZE, SIZE, BACKGROUND_DARK);
-
-        d.draw_rectangle(0, SIZE * 2, SIZE, SIZE, BACKGROUND_LIGHT);
-        d.draw_rectangle(SIZE, SIZE * 2, SIZE, SIZE, BACKGROUND_DARK);
-        d.draw_rectangle(SIZE * 2, SIZE * 2, SIZE, SIZE, BACKGROUND_LIGHT);
+        for x in 0..=2 {
+            for y in 0..=2 {
+                let color = if let Some(pos) = win_combination && ((x, y) == pos.0 || (x, y) == pos.1 || (x, y) == pos.2) {
+                    Color::SKYBLUE
+                } else if (x + y * 3) % 2 == 0 {
+                    BACKGROUND_DARK
+                } else {
+                    BACKGROUND_LIGHT
+                };
+                d.draw_rectangle(x as i32 * SIZE, y as i32 * SIZE, SIZE, SIZE, color);
+            }
+        }
     }
 
     // Draw lines to separate tiles / cells

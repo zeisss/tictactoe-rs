@@ -53,7 +53,7 @@ impl Default for GameState {
     }
 }
 
-type WinCombination = ((usize, usize), (usize, usize), (usize, usize));
+pub type WinCombination = ((usize, usize), (usize, usize), (usize, usize));
 
 impl GameState {
     pub fn get_cell(&self, pos: (usize, usize)) -> Cell {
