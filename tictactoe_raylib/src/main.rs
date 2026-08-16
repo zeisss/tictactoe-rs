@@ -5,7 +5,7 @@ use tictactoe_ratatui::tictactoe::{Cell, GameState, Outcome, PlaceError, Player}
 fn main() {
     let (mut rl, thread) = raylib::init()
         .size(800, 600)
-        .title("TicTacToe Rust")
+        .title("TicTacToe in Rust + Raylib")
         .build();
 
     let mut game = GameState::default();
@@ -38,7 +38,7 @@ fn main() {
 
         // Render
         let mut d = rl.begin_drawing(&thread);
-        d.clear_background(Color::WHITE);
+        d.clear_background(Color::PINK); // pink to check everything is covered
         draw_game_board(&mut d, &game);
         draw_side_panel(&mut d, &game, last_placement);
     }
@@ -72,6 +72,7 @@ const TEXT_COLOR: Color = Color::BLACK;
 const ERROR_COLOR: Color = Color::DARKRED;
 const BACKGROUND_LIGHT: Color = Color::LIGHTGRAY;
 const BACKGROUND_DARK: Color = Color::GRAY;
+const BACKGROUND_SIDE: Color = Color::WHITESMOKE;
 const LINE_COLOR: Color = Color::BLACK;
 
 fn draw_side_panel(
@@ -79,6 +80,11 @@ fn draw_side_panel(
     game: &GameState,
     last_placement: Result<(), PlaceError>,
 ) {
+    // Background + Separator Line to board
+    d.draw_rectangle(600, 0, 200, 600, BACKGROUND_SIDE);
+    d.draw_line(600, 0, 600, 600, LINE_COLOR);
+    d.draw_line(601, 0, 601, 600, LINE_COLOR);
+
     let mut y = 10;
     // IF last_placement has an error, we need to show it
     if let Err(err) = last_placement {
