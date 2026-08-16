@@ -13,16 +13,16 @@ fn main() {
     let mut last_placement = Ok(());
 
     while !rl.window_should_close() {
-        if let Some(action) = key_bindings.get_action(&mut rl) {
-            match action {
-                Action::PlaceToken(x, y) => {
-                    last_placement = game.place(x, y)
-                },
-                Action::ResetBoard => {
-                    game = GameState::default();
-                    last_placement = Ok(());
-                }
-            }
+        // NOTE: Quitting the application via Escape is handled by raylib itself, no need for a keybinding for now
+        match key_bindings.get_action(&mut rl) {
+            Some(Action::PlaceToken(x, y)) => {
+                last_placement = game.place(x, y)
+            },
+            Some(Action::ResetBoard) => {
+                game = GameState::default();
+                last_placement = Ok(());
+            },
+            None => {},
         }
 
         // Render
@@ -34,6 +34,7 @@ fn main() {
     }
 }
 
+// UI Actions
 enum Action {
     PlaceToken(usize, usize),
     ResetBoard
