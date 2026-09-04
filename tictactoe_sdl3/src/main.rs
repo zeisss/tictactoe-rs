@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use tictactoe_ratatui::tictactoe::{Cell, GameState, Outcome, PlaceError, Player};
+use tictactoe::{Cell, GameState, Outcome, PlaceError, Player};
 
 use sdl3::event::Event;
 use sdl3::keyboard::{Keycode, Mod, Scancode};

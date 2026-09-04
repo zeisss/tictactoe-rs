@@ -1,5 +1,5 @@
 use raylib::prelude::*;
-use tictactoe_ratatui::tictactoe::{Cell, GameState, Outcome, PlaceError, Player, WinCombination};
+use tictactoe::{Cell, GameState, Outcome, PlaceError, Player, WinCombination};
 
 use crate::key_bindings::*;
 

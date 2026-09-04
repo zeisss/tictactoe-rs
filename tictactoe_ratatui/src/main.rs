@@ -12,10 +12,7 @@ use ratatui::widgets::canvas::{Canvas, Circle, Context, Line};
 
 // Name: Waldemar, James and Stephan's TicTacToe
 
-mod tictactoe;
-use tictactoe::{GameState, PlaceError};
-
-use crate::tictactoe::Outcome;
+use tictactoe::{GameState, PlaceError, Outcome};
 
 const QUIT_KEY: KeyEvent = KeyEvent::new(KeyCode::Char('q'), KeyModifiers::SHIFT);
 

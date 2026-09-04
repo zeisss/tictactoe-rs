@@ -1,6 +1,6 @@
 use raylib::{ffi::Rectangle, prelude::*};
 
-use tictactoe_ratatui::tictactoe::GameState;
+use tictactoe::GameState;
 
 mod board_renderer;
 mod key_bindings;
