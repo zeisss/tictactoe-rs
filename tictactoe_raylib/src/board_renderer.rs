@@ -1,8 +1,8 @@
-use raylib::prelude::*;
 use raylib::core::math::Vector2;
+use raylib::prelude::*;
 use tictactoe::{Cell, GameState, Outcome, PlaceError, Player, WinCombination};
 
-use crate::key_bindings::*;
+use crate::{Textures, key_bindings::*};
 
 pub fn player_color(p: Player) -> Color {
     match p {
@@ -19,6 +19,10 @@ pub const BACKGROUND_DARK: Color = Color::GRAY;
 pub const BACKGROUND_SIDE: Color = Color::WHITESMOKE;
 pub const LINE_COLOR: Color = Color::BLACK;
 
+// Texture indices
+pub const TEXTURE_ID_CROSS: usize = 0;
+pub const TEXTURE_ID_NOUGHT: usize = 1;
+
 #[derive(Debug, Copy, Clone)]
 pub enum Error {
     LocalError(PlaceError),
@@ -28,6 +32,7 @@ pub enum Error {
 pub struct Renderer<'a, 'b> {
     pub game: &'a GameState,
     pub key_bindings: &'a KeyBinding,
+    pub textures: &'a Textures,
     pub error: Option<Error>,
     pub draw: &'a mut RaylibDrawHandle<'b>,
 }
@@ -35,7 +40,12 @@ pub struct Renderer<'a, 'b> {
 impl<'a, 'b> Renderer<'a, 'b> {
     pub fn render(&mut self) {
         self.draw.clear_background(Color::PINK); // pink to check everything is covered
-        draw_game_board(&mut self.draw, &self.game, &self.key_bindings);
+        draw_game_board(
+            &mut self.draw,
+            &self.game,
+            &self.key_bindings,
+            &self.textures,
+        );
         draw_side_panel(&mut self.draw, &self.game, self.error, &self.key_bindings);
     }
 }
@@ -111,7 +121,12 @@ pub fn draw_side_panel(
 const MARGIN: i32 = 20;
 const SIZE: i32 = 200;
 
-pub fn draw_game_board(d: &mut RaylibDrawHandle, game: &GameState, key_bindings: &KeyBinding) {
+pub fn draw_game_board(
+    d: &mut RaylibDrawHandle,
+    game: &GameState,
+    key_bindings: &KeyBinding,
+    textures: &Textures,
+) {
     // Check if the game is over and copy the win combination
     let win_combination: Option<WinCombination> =
         if let Some(Outcome::PlayerWins(_, combination)) = game.outcome {
@@ -119,7 +134,6 @@ pub fn draw_game_board(d: &mut RaylibDrawHandle, game: &GameState, key_bindings:
         } else {
             None
         };
-
 
     // Draw checker board
     {
@@ -158,13 +172,24 @@ pub fn draw_game_board(d: &mut RaylibDrawHandle, game: &GameState, key_bindings:
                 SIZE as f32,
                 SIZE as f32,
             );
-            draw_board_cell(d, target, cell, key_bindings.get_name_for_position(x, y));
+            draw_board_cell(
+                d,
+                target,
+                cell,
+                key_bindings.get_name_for_position(x, y),
+                textures,
+            );
         }
     }
 }
 
-
-fn draw_board_cell(d: &mut RaylibDrawHandle, r: Rectangle, cell: Cell, text: String) {    
+fn draw_board_cell(
+    d: &mut RaylibDrawHandle,
+    r: Rectangle,
+    cell: Cell,
+    text: String,
+    textures: &Textures,
+) {
     match cell {
         Cell::Empty => {
             draw_key_box(
@@ -181,37 +206,53 @@ fn draw_board_cell(d: &mut RaylibDrawHandle, r: Rectangle, cell: Cell, text: Str
             );
         }
         Cell::PlayerOccupied(Player::Cross) => {
-            let top_left = Vector2::new(r.x, r.y);
-            let bottom_right = Vector2::new(r.x + r.width, r.y + r.height);
-            d.draw_line(
-                top_left.x as i32 + MARGIN,
-                top_left.y as i32 + MARGIN,
-                bottom_right.x as i32 - MARGIN,
-                bottom_right.y as i32 - MARGIN,
+            
+            let t = &textures.textures[TEXTURE_ID_CROSS];
+            d.draw_texture_pro(
+                t,
+                Rectangle::new(0.0, 0.0, 50.0, 50.0),
+                r,
+                Vector2::ZERO,
+                0.0,
                 player_color(Player::Cross),
             );
-            d.draw_line(
-                bottom_right.x as i32 - MARGIN,
-                top_left.y as i32 + MARGIN,
-                top_left.x as i32 + MARGIN,
-                bottom_right.y as i32 - MARGIN,
-                player_color(Player::Cross),
-            );
+            // let top_left = Vector2::new(r.x, r.y);
+            // let bottom_right = Vector2::new(r.x + r.width, r.y + r.height);
+            // d.draw_line(
+            //     top_left.x as i32 + MARGIN,
+            //     top_left.y as i32 + MARGIN,
+            //     bottom_right.x as i32 - MARGIN,
+            //     bottom_right.y as i32 - MARGIN,
+            //     player_color(Player::Cross),
+            // );
+            // d.draw_line(
+            //     bottom_right.x as i32 - MARGIN,
+            //     top_left.y as i32 + MARGIN,
+            //     top_left.x as i32 + MARGIN,
+            //     bottom_right.y as i32 - MARGIN,
+            //     player_color(Player::Cross),
+            // );
         }
         Cell::PlayerOccupied(Player::Nought) => {
-            // draw a circle
-            let center = Vector2::new(
-                r.x + r.width / 2.0,
-                r.y + r.height/ 2.0,
-            );
-            d.draw_ellipse_lines(
-                center.x as i32,
-                center.y as i32,
-                r.width / 2.0 - MARGIN as f32,
-                r.height / 2.0 - MARGIN as f32,
-                // (SIZE as f32) / 2.0 - MARGIN as f32,
+            let t = &textures.textures[TEXTURE_ID_NOUGHT];
+            d.draw_texture_pro(
+                t,
+                Rectangle::new(0.0, 0.0, 50.0, 50.0),
+                r,
+                Vector2::ZERO,
+                0.0,
                 player_color(Player::Nought),
             );
+            // draw a circle
+            // let center = Vector2::new(r.x + r.width / 2.0, r.y + r.height / 2.0);
+            // d.draw_ellipse_lines(
+            //     center.x as i32,
+            //     center.y as i32,
+            //     r.width / 2.0 - MARGIN as f32,
+            //     r.height / 2.0 - MARGIN as f32,
+            //     // (SIZE as f32) / 2.0 - MARGIN as f32,
+            //     player_color(Player::Nought),
+            // );
         }
     };
 }

@@ -1,3 +1,5 @@
+use std::{thread::sleep, time::{self, Duration}};
+
 use raylib::{ffi::Rectangle, prelude::*};
 
 use tictactoe::GameState;
@@ -17,6 +19,11 @@ enum Screen {
     Quit,
 }
 
+struct Textures {
+    images: Vec<Image>,
+    textures: Vec<Texture2D>,
+}
+
 fn main() {
     let (mut rl, thread) = raylib::init()
         .size(800, 600)
@@ -24,15 +31,15 @@ fn main() {
         .build();
     rl.set_target_fps(30);
     rl.set_exit_key(None);
-    let mut screen = Screen::Menu;
 
-    let key_bindings = KeyBinding::from_raylib_handle(&mut rl);
+    let key_bindings = KeyBinding::from_raylib_handle(&mut rl);    
+    let (mut screen, textures) = run_loading_screen(&mut rl, &thread);
 
     loop {
         println!("Entering screen {:?}", screen);
         screen = match screen {
             Screen::Menu => run_menu_screen(&mut rl, &thread),
-            Screen::LocalPlay => run_local_play_screen(&mut rl, &thread, &key_bindings),
+            Screen::LocalPlay => run_local_play_screen(&mut rl, &thread, &key_bindings, &textures),
             Screen::ServerMode => todo!("Not implemented yet"),
             Screen::ClientMode => todo!("Not implemented yet"),
             Screen::Quit => break,
@@ -45,6 +52,28 @@ fn main() {
             d.clear_background(Color::WHITE);
         });
     }
+}
+
+// Load textures into 
+fn run_loading_screen(rl: &mut RaylibHandle, thread: &RaylibThread) -> (Screen, Textures) {
+    let assets = vec![
+        "assets/cross.png", "assets/target.png",
+    ];
+
+    // Draw something, so the user sees a text while we do the actual work
+    rl.draw(thread, |mut d| {
+        let text = "Loading ...";
+        d.clear_background(Color::WHITE);
+        d.draw_text(text, 300, 300, 50, Color::BLACK);
+    });
+    
+    // TODO: Should this be a separate thread?
+
+    // Images: Main memory / CPU | Textures: GPU
+    let images: Vec<Image> = assets.iter().map(|it| Image::load_image(*it).unwrap() ).collect();
+    let textures: Vec<Texture2D> = images.iter().map(|it| rl.load_texture_from_image(thread, it).unwrap()).collect();
+
+    return (Screen::Menu, Textures{images, textures});
 }
 
 // Main Menu
@@ -94,6 +123,7 @@ fn run_local_play_screen(
     rl: &mut RaylibHandle,
     thread: &RaylibThread,
     key_bindings: &KeyBinding,
+    textures: &Textures,
 ) -> Screen {
     let mut game = GameState::default();
     let mut last_placement = Ok(());
@@ -114,6 +144,7 @@ fn run_local_play_screen(
             let mut renderer = Renderer {
                 game: &game,
                 key_bindings: &key_bindings,
+                textures: &textures,
                 error: last_placement.err().map(|err| Error::LocalError(err)),
                 draw: &mut d,
             };
