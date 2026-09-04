@@ -1,4 +1,5 @@
 use raylib::prelude::*;
+use raylib::core::math::Vector2;
 use tictactoe::{Cell, GameState, Outcome, PlaceError, Player, WinCombination};
 
 use crate::key_bindings::*;
@@ -107,6 +108,9 @@ pub fn draw_side_panel(
     d.draw_text("Quit app", x + 40, y + 5, 20, TEXT_COLOR);
 }
 
+const MARGIN: i32 = 20;
+const SIZE: i32 = 200;
+
 pub fn draw_game_board(d: &mut RaylibDrawHandle, game: &GameState, key_bindings: &KeyBinding) {
     // Check if the game is over and copy the win combination
     let win_combination: Option<WinCombination> =
@@ -116,8 +120,6 @@ pub fn draw_game_board(d: &mut RaylibDrawHandle, game: &GameState, key_bindings:
             None
         };
 
-    const MARGIN: i32 = 20;
-    const SIZE: i32 = 200;
 
     // Draw checker board
     {
@@ -150,49 +152,68 @@ pub fn draw_game_board(d: &mut RaylibDrawHandle, game: &GameState, key_bindings:
     for x in 0..=2 {
         for y in 0..=2 {
             let cell = game.get_cell((x, y));
-
-            match cell {
-                Cell::Empty => {
-                    draw_key_box(
-                        d,
-                        Rectangle::new(
-                            (x as i32 * SIZE + 100 - 30) as f32,
-                            (y as i32 * SIZE + 100 - 30) as f32,
-                            60.0,
-                            60.0,
-                        ),
-                        key_bindings.get_name_for_position(x, y),
-                        30,
-                        KEY_COLOR,
-                    );
-                }
-                Cell::PlayerOccupied(Player::Cross) => {
-                    d.draw_line(
-                        x as i32 * SIZE + MARGIN,
-                        y as i32 * SIZE + MARGIN,
-                        x as i32 * SIZE + SIZE - MARGIN,
-                        y as i32 * SIZE + SIZE - MARGIN,
-                        player_color(Player::Cross),
-                    );
-                    d.draw_line(
-                        x as i32 * SIZE + SIZE - MARGIN,
-                        y as i32 * SIZE + MARGIN,
-                        x as i32 * SIZE + MARGIN,
-                        y as i32 * SIZE + SIZE - MARGIN,
-                        player_color(Player::Cross),
-                    );
-                }
-                Cell::PlayerOccupied(Player::Nought) => {
-                    d.draw_circle_lines(
-                        x as i32 * SIZE + SIZE / 2,
-                        y as i32 * SIZE + SIZE / 2,
-                        (SIZE as f32) / 2.0 - MARGIN as f32,
-                        player_color(Player::Nought),
-                    );
-                }
-            };
+            let target = Rectangle::new(
+                (x as i32 * SIZE) as f32,
+                (y as i32 * SIZE) as f32,
+                SIZE as f32,
+                SIZE as f32,
+            );
+            draw_board_cell(d, target, cell, key_bindings.get_name_for_position(x, y));
         }
     }
+}
+
+
+fn draw_board_cell(d: &mut RaylibDrawHandle, r: Rectangle, cell: Cell, text: String) {    
+    match cell {
+        Cell::Empty => {
+            draw_key_box(
+                d,
+                Rectangle::new(
+                    (r.x + 100.0 - 30.0) as f32,
+                    (r.y + 100.0 - 30.0) as f32,
+                    60.0,
+                    60.0,
+                ),
+                text,
+                30,
+                KEY_COLOR,
+            );
+        }
+        Cell::PlayerOccupied(Player::Cross) => {
+            let top_left = Vector2::new(r.x, r.y);
+            let bottom_right = Vector2::new(r.x + r.width, r.y + r.height);
+            d.draw_line(
+                top_left.x as i32 + MARGIN,
+                top_left.y as i32 + MARGIN,
+                bottom_right.x as i32 - MARGIN,
+                bottom_right.y as i32 - MARGIN,
+                player_color(Player::Cross),
+            );
+            d.draw_line(
+                bottom_right.x as i32 - MARGIN,
+                top_left.y as i32 + MARGIN,
+                top_left.x as i32 + MARGIN,
+                bottom_right.y as i32 - MARGIN,
+                player_color(Player::Cross),
+            );
+        }
+        Cell::PlayerOccupied(Player::Nought) => {
+            // draw a circle
+            let center = Vector2::new(
+                r.x + r.width / 2.0,
+                r.y + r.height/ 2.0,
+            );
+            d.draw_ellipse_lines(
+                center.x as i32,
+                center.y as i32,
+                r.width / 2.0 - MARGIN as f32,
+                r.height / 2.0 - MARGIN as f32,
+                // (SIZE as f32) / 2.0 - MARGIN as f32,
+                player_color(Player::Nought),
+            );
+        }
+    };
 }
 
 fn draw_key_box(
